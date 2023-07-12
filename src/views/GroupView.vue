@@ -13,6 +13,8 @@
         <button @click="del('pushup_sessies', session.id)" class="btn btn-error btn-sm">Del</button>
       </div>
 
+      <h1 class="text-2xl font-bold">totaal: {{ getTotalReps() }}</h1>
+
     </div>
 
 
@@ -98,9 +100,17 @@ export default {
         dag: this.newSession.dag,
         maand: this.newSession.maand,
         jaar: this.newSession.jaar,
+        tijd: new Date().getMinutes() + new Date().getHours() * 60,
         user: auth.user.id,
         group: this.$route.params?.id
       })
+    },
+    getTotalReps(): number {
+      let total = 0
+      this.sessions.filter(e => e.user == auth.user.id).forEach(session => {
+        total += session.reps
+      })
+      return total
     },
     async getSessions() {
 
