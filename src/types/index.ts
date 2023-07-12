@@ -4,7 +4,8 @@ export interface BaseUser extends Record {
   username: string
   verified: boolean
   emailVisibility: boolean,
-  email: string
+  email: string,
+  groups: string[]
 }
 export type Groep = Record & {
   type: string

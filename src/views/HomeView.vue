@@ -14,7 +14,8 @@
       <div class="p-4 bg-base-200 flex items-center rounded-xl" v-for="groep in groepen">
         <h1 class="flex-1">{{ groep.naam }}</h1>
 
-        <RouterLink :to="`/group/${groep.id}`" class="btn">Open</RouterLink>
+        <RouterLink v-if="auth.user.groups.includes(groep.id)" :to="`/group/${groep.id}`" class="btn">Open</RouterLink>
+        <button class="btn" v-else @click="join(groep.id)">Deelnemen</button>
 
       </div>
 
@@ -44,6 +45,11 @@ export default {
     this.groepen = await pb.collection("pushup_groepen").getFullList<Groep>()
   },
   methods: {
+    join(groupID: string) {
+      pb.collection("pushup_users").update(auth.user.id, {
+        groups: [...auth.user.groups, groupID]
+      })
+    },
     update(collection: string, record: Record) {
       pb.collection(collection).update(record.id, record)
     },
