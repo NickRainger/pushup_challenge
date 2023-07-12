@@ -30,7 +30,7 @@
 
       <div class="flex w-full">
 
-        <input class="w-full input input-sm" type="number" required v-model="newSession.reps">
+        <input class="w-full input input-sm" type="number" min="1" required v-model="newSession.reps">
         <input class="w-full input input-sm" type="number" required v-model="newSession.dag">
         <input class="w-full input input-sm" type="number" required v-model="newSession.maand">
         <input class="w-full input input-sm" type="number" required v-model="newSession.jaar">
@@ -42,7 +42,7 @@
     </form>
 
 
-    <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
+    <!-- <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
 
       <div v-for="session in sessions.filter(e => e.user == auth.user.id).reverse()" class="flex">
 
@@ -52,16 +52,13 @@
         <button @click="del('pushup_sessies', session.id)" class="btn btn-error btn-sm">Del</button>
       </div>
 
-    </div>
+    </div> -->
 
     <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
 
-      <div v-for="session in sessions.filter(e => e.user != auth.user.id)">
+      <div v-for="session in sessions.filter(e => e.user != auth.user.id)" class="text-xl font-bold ">
 
-        {{ session }}
-
-        <!-- {{ sessions.filter(e => e.user == user.id) }} -->
-
+        {{ session.expand.user?.username }}, {{ session.reps }} Reps
 
       </div>
     </div>
@@ -75,6 +72,11 @@ import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Groep, Session } from '@/types';
 import type { Record } from 'pocketbase';
 
+type ExtendedSession = Session & {
+  expand: {
+    user?: BaseUser
+  }
+}
 
 export default {
   data: () => ({
@@ -87,7 +89,7 @@ export default {
     auth,
     group: <Groep>{},
     users: <BaseUser[]>[],
-    sessions: <Session[]>[]
+    sessions: <ExtendedSession[]>[]
   }),
   methods: {
     addSession() {
@@ -103,8 +105,10 @@ export default {
     async getSessions() {
 
 
-      this.sessions = await pb.collection("pushup_sessies").getFullList<Session>({
+      this.sessions = await pb.collection("pushup_sessies").getFullList<ExtendedSession>({
         filter: `group = "${this.$route.params?.id}" && dag = "${new Date().getDate()}" && jaar = "${new Date().getFullYear()}" && maand = "${new Date().getMonth() + 1}"`,
+        sort: "-created",
+        expand: "user"
       })
 
       const session = this.sessions.filter(e => e.user == auth.user.id)[0]
@@ -126,7 +130,7 @@ export default {
     }
 
     this.users = await pb.collection("pushup_users").getFullList<BaseUser>({
-      filter: `groups.id ?= "${this.$route.params?.id}"`,
+      filter: `groups.id ?= "${this.$route.params?.id}"`
     })
 
     this.getSessions()
