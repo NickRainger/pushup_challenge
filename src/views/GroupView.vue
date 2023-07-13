@@ -1,17 +1,37 @@
 <template>
-  <main class="p-2">
+  <div class="flex gap-4 items-center p-2">
+    <RouterLink to="/" class="btn btn-square p-2">
+      <chevronLeft class="h-full w-full fill-base-content" />
+    </RouterLink>
+    <h1 class="text-2xl font-bold">{{ groupUser.expand?.group?.naam }}</h1>
+  </div>
 
-    <div class="flex gap-4 items-center px-2 pt-2">
-      <RouterLink to="/" class="btn btn-square p-2">
-        <chevronLeft class="h-full w-full fill-base-content" />
-      </RouterLink>
-      <h1 class="text-2xl font-bold">{{ groupUser.expand?.group?.naam }}</h1>
-    </div>
+  <main class="p-2 grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-6">
 
-    <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
+    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
+
+      <div class="flex items-center justify-center gap-4">
+
+        <button class="btn btn-square text-3xl material-symbols-outlined" @click="setDay('subtract')">
+          horizontal_rule
+        </button>
+
+        <h1 class="font-bold"> {{ selectedDate }}</h1>
+        <button class="btn font-bold" :class="{ 'btn-disabled': new Date().toLocaleDateString() == selectedDate }"
+          @click="setDay('today')">
+          vandaag
+        </button>
+
+        <button class="btn btn-square text-3xl material-symbols-outlined" @click="setDay('add')">
+          add
+        </button>
+
+      </div>
 
       <div v-for="session in sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).reverse()" class="flex">
-        <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }} {{ formatTime(session.tijd) }}</h1>
+        <h1 class="text-xl font-semibold text-white">{{ formatTime(session.tijd) }}</h1>
+        <pre class="text-xl font-semibold text-white"> - </pre>
+        <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }} </h1>
         <button @click="del('pushup_sessies', session.id)" class="btn btn-error btn-sm">Del</button>
       </div>
 
@@ -19,50 +39,24 @@
 
     </div>
 
-
-
-    <!-- {{ sessions.filter(e => e.user == auth.user.id) }} -->
-
     <form @submit="addSession()" @submit.prevent class="flex flex-col gap-2 p-4 bg-base-200 rounded-xl">
 
-      <div class="flex w-full">
-        <div class="w-full">reps</div>
-        <div class="w-full">dag</div>
-        <div class="w-full">maand</div>
-        <div class="w-full">jaar</div>
+      <h1 class="text-xl font-semibold">reps</h1>
+
+      <div class="join w-full">
+        <input class="input input-sm join-item w-1/2" type="text" required v-model="newSession" placeholder="reps">
+        <button class="btn btn-success btn-sm join-item w-1/2">Toevoegen</button>
       </div>
-
-      <div class="flex w-full">
-
-        <input class="w-full input input-sm" type="text" min="1" required v-model="newSession.reps">
-        <input class="w-full input input-sm" type="text" required v-model="newSession.dag">
-        <input class="w-full input input-sm" type="text" required v-model="newSession.maand">
-        <input class="w-full input input-sm" type="text" required v-model="newSession.jaar">
-      </div>
-
-      <button class="btn btn-success btn-sm">Toevoegen</button>
-
 
     </form>
 
 
-    <!-- <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
-
-      <div v-for="session in sessions.filter(e => e.user == auth.user.id).reverse()" class="flex">
-
-        <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }}</h1>
+    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
+      <canvas id="chart"></canvas>
+    </div>
 
 
-        <button @click="del('pushup_sessies', session.id)" class="btn btn-error btn-sm">Del</button>
-      </div>
-
-    </div> -->
-
-    <!-- <pre>{{ sessions }}</pre> -->
-
-
-
-    <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
+    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
 
       <h1 class="text-xl font-bold">Leaderboard</h1>
 
@@ -77,7 +71,7 @@
     </div>
 
 
-    <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
+    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
 
       <!-- <div v-for="session in sessions.filter(e => e.expand.groupuser?.user != auth.user?.id)" class="text-xl font-bold "> -->
       <div v-for="session in sessions" class="text-xl font-bold ">
@@ -92,50 +86,83 @@
 </template>
 
 <script lang="ts">
+import Chart, { type Chart as ChartType } from "chart.js/auto"
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Group, Session, GroupUser } from '@/types';
 import chevronLeft from "@/assets/chevron-left-solid.vue"
+import { data } from "autoprefixer";
 
-
+function getHexFromString(seed: string): string {
+  return Math.floor((Math.abs(Math.sin(parseInt(seed, 36)) * 16777215))).toString(16)
+}
 
 interface ExtendedGroupUser extends GroupUser {
   completedTime?: number
   expand: {
-    user?: BaseUser
-    group?: Group
+    user: BaseUser
+    group: Group
   }
 }
 
 interface ExtendedSession extends Session {
   expand: {
-    groupuser?: ExtendedGroupUser
+    groupuser: ExtendedGroupUser
   }
 }
+
+class ChartUpdate {
+  listeners: { event: string, cb: Function }[]
+  constructor() {
+    this.listeners = []
+  }
+  emit(event: string, data: any) {
+    this.listeners.filter(e => e.event == event).forEach(event => {
+      event.cb(data)
+    })
+  }
+  on(event: string, cb: Function) {
+    this.listeners.push({ event, cb })
+  }
+}
+
+const chartUpdate = new ChartUpdate
 
 export default {
   components: {
     chevronLeft
   },
   data: () => ({
-    newSession: {
-      reps: <number | string>"",
-      dag: new Date().getDate(),
-      maand: new Date().getMonth() + 1,
-      jaar: new Date().getFullYear()
-    },
+    newSession: <number | string>"",
+    date: new Date(),
+    selectedDate: "",
     auth,
     // group: <Group>{},
     groupUser: <ExtendedGroupUser>{},
     groupUsers: <ExtendedGroupUser[]>[],
-    sessions: <ExtendedSession[]>[]
+    sessions: <ExtendedSession[]>[],
   }),
   methods: {
+    setDay(type: "subtract" | "add" | "today") {
+      console.log(this.date.toLocaleDateString());
+
+      if (type == 'subtract') {
+        this.date.setDate(this.date.getDate() - 1)
+      } else if (type == 'add') {
+        this.date.setDate(this.date.getDate() + 1)
+      } else if (type == 'today') {
+        this.date = new Date()
+      }
+
+      this.getSessions()
+
+      this.selectedDate = this.date.toLocaleDateString()
+    },
     addSession() {
       pb.collection("pushup_sessies").create({
-        reps: this.newSession.reps,
-        dag: this.newSession.dag,
-        maand: this.newSession.maand,
-        jaar: this.newSession.jaar,
+        reps: this.newSession,
+        dag: this.date.getDate(),
+        maand: this.date.getMonth() + 1,
+        jaar: this.date.getFullYear(),
         tijd: new Date().getMinutes() + new Date().getHours() * 60,
         groupuser: this.groupUser.id,
       })
@@ -161,17 +188,13 @@ export default {
 
 
       this.sessions = await pb.collection("pushup_sessies").getFullList<ExtendedSession>({
-        filter: `dag = "${new Date().getDate()}" && jaar = "${new Date().getFullYear()}" && maand = "${new Date().getMonth() + 1}"`,
+        filter: `groupuser.group = "${this.$route.params?.id}" && dag = "${this.date.getDate()}" && jaar = "${this.date.getFullYear()}" && maand = "${this.date.getMonth() + 1}"`,
         sort: "-tijd",
         expand: "groupuser.user"
       })
 
-      // const session = this.sessions.find(e => e.groupuser == auth.user?.id)
-      // if (!session) {
-      //   return
-      // }
+      this.renderChart()
 
-      // this.newSession.reps = session.reps
     },
     async getGroupUsers() {
 
@@ -189,22 +212,18 @@ export default {
 
 
       this.groupUsers.forEach(groupUser => {
-        const sessions = this.sessions.reverse().filter(e => e.groupuser == groupUser.id)
-
+        const sessions = [...this.sessions.filter(e => e.groupuser == groupUser.id)].reverse()
         // console.log(session.length);
         let total = 0
-        sessions.forEach(session => {
+        sessions.every(session => {
           total += session.reps
           if (total >= 100) {
             groupUser.completedTime = session.tijd
+            return false
           }
+          return true
         })
       });
-
-
-      this.groupUsers = this.groupUsers.sort((a, b) => {
-        return this.getTotalReps(b.user) - this.getTotalReps(a.user)
-      })
 
       this.groupUsers = this.groupUsers.sort((a, b) => {
         if (a.completedTime && b.completedTime) {
@@ -213,39 +232,93 @@ export default {
         return 0
       })
 
+      this.groupUsers = this.groupUsers.sort((a, b) => {
+        return Math.min(this.getTotalReps(b.user), 100) - Math.min(this.getTotalReps(a.user), 100)
+      })
+
       const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
       if (groupUser) {
         this.groupUser = groupUser
       }
+    },
+    renderChart() {
+
+      const tijden: number[] = []
+
+      const first = [...this.sessions].reverse()?.[0]?.tijd
+      const last = [...this.sessions]?.[0]?.tijd
+
+      const start = Math.floor(first / 10) * 10 - 10
+      const end = Math.ceil(last / 10) * 10 + 10
+
+      for (let i = start; i < end; i += 10) {
+        tijden.push(i)
+      }
+
+      const datasets: { label?: string, data: number[] }[] = []
+
+      this.groupUsers.forEach(groupuser => {
+
+        const backgroundColor = `#${getHexFromString(groupuser.expand.user.username)}80`
+        const borderColor = `#${getHexFromString(groupuser.expand.user.username)}`
+
+        const userDataSet: { label?: string, data: number[], backgroundColor: string, borderColor: string } = {
+          label: groupuser.expand.user.username,
+          data: [],
+          backgroundColor,
+          borderColor
+        }
+
+        tijden.forEach((tijd) => {
+          userDataSet.data.push(userDataSet.data[userDataSet.data.length - 1] || 0)
+          this.sessions.filter(e => e.expand.groupuser.user == groupuser.user).forEach((session) => {
+            if (session.tijd >= tijd && session.tijd < tijd + 10) {
+              userDataSet.data[userDataSet.data.length - 1] += session.reps
+            }
+          })
+        })
+        datasets.push(userDataSet)
+      })
+      chartUpdate.emit("update", { datasets, tijden })
     }
   },
   async mounted() {
 
-
+    this.selectedDate = this.date.toLocaleDateString()
 
     await this.getSessions()
     await this.getGroupUsers()
 
-    // if (typeof this.$route.params?.id == "string") {
-    //   this.groupUser = await pb.collection("pushup_groupusers").getOne<ExtendedGroupUser>(this.$route.params?.id, {
-    //     expand: "user, group"
-    //   })
-    // }
+    const ctx = <HTMLCanvasElement>document.getElementById("chart")
 
-    pb.collection("pushup_sessies").subscribe("*", () => {
-      this.getSessions()
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [],
+      }
+    });
+
+    chartUpdate.on("update", (e: { tijden: number[], datasets: { label?: string, data: number[] }[] }) => {
+
+      chart.data.labels = <never[]>e.tijden.map(e => this.formatTime(e))
+      chart.data.datasets = e.datasets
+
+      chart.update()
+    })
+
+    this.renderChart()
+
+    pb.collection("pushup_sessies").subscribe("*", async () => {
+      await this.getSessions()
       this.updateGroupUsers()
       // this.getGroupUsers()
     })
-    pb.collection("pushup_groupusers").subscribe("*", () => {
+    pb.collection("pushup_groupusers").subscribe("*", async () => {
       // this.getSessions()
-      this.getGroupUsers()
+      await this.getGroupUsers()
+      this.renderChart()
     })
-
-    // this.groupUser = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
-    //   filter: `group = "${this.$route.params?.id}"`
-    // })
-
 
   }
 }

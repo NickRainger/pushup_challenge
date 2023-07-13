@@ -7,7 +7,7 @@ export interface BaseUser extends Record {
   email: string,
 }
 export interface Group extends Record {
-  type: string
+  type: "public" | "invite" | "private"
   naam: string
 }
 export interface GroupUser extends Record {
