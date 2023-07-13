@@ -5,14 +5,17 @@ export interface BaseUser extends Record {
   verified: boolean
   emailVisibility: boolean,
   email: string,
-  groups: string[]
 }
-export type Groep = Record & {
+export interface Group extends Record {
   type: string
   naam: string
 }
+export interface GroupUser extends Record {
+  user: string
+  groep: string
+}
 
-export type Session = Record & {
+export interface Session extends Record {
   user: string
   groep: string
   reps: number

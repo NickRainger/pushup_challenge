@@ -5,11 +5,11 @@ import router from "@/router";
 
 const pb = new PocketBase('https://pbapi.rainger.nl')
 
-let auth = reactive({ user: <BaseUser>pb.authStore.model })
+let auth = reactive({ user: <BaseUser | null>pb.authStore.model })
 
 pb.authStore.onChange((token, model) => {
 
-  auth.user = <BaseUser>model
+  auth.user = <BaseUser | null>model
 
   if (model) {
     router.push("/")

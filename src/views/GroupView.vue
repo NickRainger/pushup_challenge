@@ -4,8 +4,7 @@
     <h1 class="text-2xl font-bold px-4 pt-4">{{ group.naam }}</h1>
 
     <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
-
-      <div v-for="session in sessions.filter(e => e.user == auth.user.id).reverse()" class="flex">
+      <div v-for="session in sessions.filter(e => e.expand.groupuser.user == auth.user?.id).reverse()" class="flex">
 
         <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }}</h1>
 
@@ -58,9 +57,9 @@
 
     <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
 
-      <div v-for="session in sessions.filter(e => e.user != auth.user.id)" class="text-xl font-bold ">
+      <div v-for="session in sessions.filter(e => e.expand.groupuser.user != auth.user?.id)" class="text-xl font-bold ">
 
-        {{ session.expand.user?.username }}, {{ session.reps }} Reps
+        {{ session.expand.groupuser.expand.user.username }}, {{ session.reps }} Reps
 
       </div>
     </div>
@@ -71,12 +70,19 @@
 
 <script lang="ts">
 import { auth, pb } from '@/pocketbase';
-import type { BaseUser, Groep, Session } from '@/types';
-import type { Record } from 'pocketbase';
+import type { BaseUser, Group, Session, GroupUser } from '@/types';
 
-type ExtendedSession = Session & {
+
+
+interface ExtendedGroupUser extends GroupUser {
   expand: {
-    user?: BaseUser
+    user: BaseUser
+  }
+}
+
+interface ExtendedSession extends Session {
+  expand: {
+    groupuser: ExtendedGroupUser
   }
 }
 
@@ -89,8 +95,8 @@ export default {
       jaar: new Date().getFullYear()
     },
     auth,
-    group: <Groep>{},
-    users: <BaseUser[]>[],
+    group: <Group>{},
+    groupUser: <ExtendedGroupUser>{},
     sessions: <ExtendedSession[]>[]
   }),
   methods: {
@@ -101,13 +107,12 @@ export default {
         maand: this.newSession.maand,
         jaar: this.newSession.jaar,
         tijd: new Date().getMinutes() + new Date().getHours() * 60,
-        user: auth.user.id,
-        group: this.$route.params?.id
+        groupuser: this.$route.params?.id,
       })
     },
     getTotalReps(): number {
       let total = 0
-      this.sessions.filter(e => e.user == auth.user.id).forEach(session => {
+      this.sessions.filter(e => e.expand.groupuser.user == auth.user?.id).forEach(session => {
         total += session.reps
       })
       return total
@@ -116,12 +121,15 @@ export default {
 
 
       this.sessions = await pb.collection("pushup_sessies").getFullList<ExtendedSession>({
-        filter: `group = "${this.$route.params?.id}" && dag = "${new Date().getDate()}" && jaar = "${new Date().getFullYear()}" && maand = "${new Date().getMonth() + 1}"`,
+        filter: `groupuser = "${this.$route.params?.id}" && dag = "${new Date().getDate()}" && jaar = "${new Date().getFullYear()}" && maand = "${new Date().getMonth() + 1}"`,
         sort: "-created",
-        expand: "user"
+        expand: "groupuser.user"
       })
 
-      const session = this.sessions.filter(e => e.user == auth.user.id)[0]
+      const session = this.sessions.filter(e => e.user == auth.user?.id)[0]
+      if (!session) {
+        return
+      }
 
       this.newSession.reps = session.reps
     },
@@ -136,12 +144,14 @@ export default {
     })
 
     if (typeof this.$route.params?.id == "string") {
-      this.group = await pb.collection("pushup_groepen").getOne<Groep>(this.$route.params?.id)
+      this.groupUser = await pb.collection("pushup_groupusers").getOne<ExtendedGroupUser>(this.$route.params?.id, {
+        expand: "user"
+      })
     }
 
-    this.users = await pb.collection("pushup_users").getFullList<BaseUser>({
-      filter: `groups.id ?= "${this.$route.params?.id}"`
-    })
+    // this.groupUser = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
+    //   filter: `group = "${this.$route.params?.id}"`
+    // })
 
     this.getSessions()
 
