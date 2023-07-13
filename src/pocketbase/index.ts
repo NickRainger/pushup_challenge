@@ -11,10 +11,10 @@ pb.authStore.onChange((token, model) => {
 
   auth.user = <BaseUser | null>model
 
-  if (model) {
-    router.push("/")
-  } else {
+  if (!model && router.currentRoute.value.meta.requiresAuth) {
     router.push("/login")
+  } else if (model && router.currentRoute.value.path == "/login") {
+    router.push("/")
   }
 
 })
