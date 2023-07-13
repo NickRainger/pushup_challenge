@@ -6,7 +6,7 @@
     <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
 
       <div v-for="session in sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).reverse()" class="flex">
-        <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }}</h1>
+        <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }} {{ formatTime(session.tijd) }}</h1>
         <button @click="del('pushup_sessies', session.id)" class="btn btn-error btn-sm">Del</button>
       </div>
 
@@ -59,7 +59,7 @@
 
       <div v-for="session in sessions.filter(e => e.expand.groupuser?.user != auth.user?.id)" class="text-xl font-bold ">
 
-        {{ session.expand.groupuser?.expand.user?.username }}, {{ session.reps }} Reps
+        {{ session.expand.groupuser?.expand.user?.username }}, {{ session.reps }} Reps {{ formatTime(session.tijd) }}
 
       </div>
     </div>
@@ -110,6 +110,9 @@ export default {
         tijd: new Date().getMinutes() + new Date().getHours() * 60,
         groupuser: this.$route.params?.id,
       })
+    },
+    formatTime(time: number) {
+      return `${Math.floor(time / 60)}:${time % 60}`
     },
     getTotalReps(): number {
       let total = 0

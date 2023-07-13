@@ -21,4 +21,5 @@ export interface Session extends Record {
   reps: number
   dag: number
   jaar: number
+  tijd: number
 }
