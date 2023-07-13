@@ -125,7 +125,7 @@ export default {
         maand: this.newSession.maand,
         jaar: this.newSession.jaar,
         tijd: new Date().getMinutes() + new Date().getHours() * 60,
-        groupuser: this.$route.params?.id,
+        groupuser: this.groupUser.id,
       })
     },
     formatTime(time: number) {
@@ -186,7 +186,7 @@ export default {
 
     await this.getSessions()
     await this.getGroupUsers()
-    
+
     // if (typeof this.$route.params?.id == "string") {
     //   this.groupUser = await pb.collection("pushup_groupusers").getOne<ExtendedGroupUser>(this.$route.params?.id, {
     //     expand: "user, group"
