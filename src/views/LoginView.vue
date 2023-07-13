@@ -34,7 +34,7 @@
         </div>
 
         <h2 class="font-bold">Naam / Email <span class="text-red-500">*</span></h2>
-        <input required v-model="form.email" type="text" class="input input-sm" placeholder="Naam / Email">
+        <input required v-model="form.username" type="text" class="input input-sm" placeholder="Naam / Email">
 
         <h2 class="font-bold">Wachtwoord <span class="text-red-500">*</span></h2>
         <input required v-model="form.password" type="password" class="input input-sm" placeholder="Wachtwoord">
