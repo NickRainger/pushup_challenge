@@ -11,11 +11,11 @@
             @click="register_screen = !register_screen">Login</button>
         </div>
 
-        <h2 class="font-bold">Naam</h2>
-        <input v-model="form.username" type="text" class="input input-sm" placeholder="Naam">
+        <h2 class="font-bold">Email</h2>
+        <input v-model="form.email" type="text" class="input input-sm" placeholder="Email">
 
-        <h2 class="font-bold">Email <span class="text-red-500">*</span></h2>
-        <input required v-model="form.email" type="text" class="input input-sm" placeholder="Email">
+        <h2 class="font-bold">Naam <span class="text-red-500">*</span></h2>
+        <input required v-model="form.username" type="text" class="input input-sm" placeholder="Naam">
 
         <h2 class="font-bold">Wachtwoord <span class="text-red-500">*</span></h2>
         <input required v-model="form.password" type="password" class="input input-sm"
@@ -68,7 +68,7 @@ export default {
     async login() {
 
 
-      pb.collection("pushup_users").authWithPassword(this.form.email, this.form.password)
+      pb.collection("pushup_users").authWithPassword(this.form.username, this.form.password)
 
 
     },
@@ -82,7 +82,7 @@ export default {
       })
 
       if (create) {
-        pb.collection("pushup_users").authWithPassword(this.form.email, this.form.password)
+        pb.collection("pushup_users").authWithPassword(this.form.username, this.form.password)
       }
     }
   }

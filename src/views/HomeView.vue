@@ -60,7 +60,8 @@ export default {
     async getGroups() {
       this.groepen = await pb.collection("pushup_groepen").getFullList<Group>()
       this.groepusers = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
-        expand: "group"
+        expand: "group",
+        filter: `groupuser.ures = "${auth.user?.id}"`
       })
 
       const groepusersArr: string[] = []
