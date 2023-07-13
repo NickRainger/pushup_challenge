@@ -116,7 +116,7 @@ export default {
   },
   data: () => ({
     newSession: {
-      reps: "",
+      reps: <number | string>"",
       dag: new Date().getDate(),
       maand: new Date().getMonth() + 1,
       jaar: new Date().getFullYear()
