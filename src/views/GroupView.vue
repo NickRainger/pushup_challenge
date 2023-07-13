@@ -10,7 +10,7 @@
         <button @click="del('pushup_sessies', session.id)" class="btn btn-error btn-sm">Del</button>
       </div>
 
-      <!-- <h1 class="text-2xl font-bold">totaal: {{ getTotalReps() }}</h1> -->
+      <h1 class="text-2xl font-bold">totaal: {{ getTotalReps(auth.user!.id) }}</h1>
 
     </div>
 
@@ -53,6 +53,22 @@
 
     </div> -->
 
+    <!-- <pre>{{ sessions }}</pre> -->
+
+
+
+    <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
+
+      <h1 class="text-xl font-bold">Leaderboard</h1>
+
+      <div v-for="groupUser, i in groupUsers" class="text-xl font-bold ">
+
+        {{ i + 1 }}. {{ groupUser.expand.user?.username }}, {{ getTotalReps(groupUser.user) }}
+
+      </div>
+
+
+    </div>
 
 
     <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
@@ -98,6 +114,7 @@ export default {
     auth,
     // group: <Group>{},
     groupUser: <ExtendedGroupUser>{},
+    groupUsers: <ExtendedGroupUser[]>[],
     sessions: <ExtendedSession[]>[]
   }),
   methods: {
@@ -114,11 +131,17 @@ export default {
     formatTime(time: number) {
       return `${Math.floor(time / 60)}:${time % 60}`
     },
-    getTotalReps(): number {
+    getTotalReps(filter: string): number {
       let total = 0
-      this.sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).forEach(session => {
+
+      // console.log(this.sessions?.[0]?.expand.groupuser?.user, filter);
+
+      this.sessions.filter(e => e.expand.groupuser?.user == filter).forEach(session => {
         total += session.reps
       })
+
+      // console.log(total);
+
       return total
     },
     async getSessions() {
@@ -130,7 +153,7 @@ export default {
         expand: "groupuser.user"
       })
 
-      const session = this.sessions.filter(e => e.user == auth.user?.id)[0]
+      const session = this.sessions.find(e => e.user == auth.user?.id)
       if (!session) {
         return
       }
@@ -143,12 +166,27 @@ export default {
   },
   async mounted() {
 
+    await this.getSessions()
 
-    if (typeof this.$route.params?.id == "string") {
-      this.groupUser = await pb.collection("pushup_groupusers").getOne<ExtendedGroupUser>(this.$route.params?.id, {
-        expand: "user, group"
-      })
+    this.groupUsers = await pb.collection("pushup_groupusers").getFullList({
+      filter: `group = "${this.$route.params?.id}"`,
+      expand: "user, group"
+    })
+    this.groupUsers = this.groupUsers.sort((a, b) => {
+      return this.getTotalReps(b.user) - this.getTotalReps(a.user)
+    })
+
+
+    const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
+    if (groupUser) {
+      this.groupUser = groupUser
     }
+
+    // if (typeof this.$route.params?.id == "string") {
+    //   this.groupUser = await pb.collection("pushup_groupusers").getOne<ExtendedGroupUser>(this.$route.params?.id, {
+    //     expand: "user, group"
+    //   })
+    // }
 
     pb.collection("pushup_sessies").subscribe("*", () => {
       this.getSessions()
@@ -158,7 +196,6 @@ export default {
     //   filter: `group = "${this.$route.params?.id}"`
     // })
 
-    this.getSessions()
 
   }
 }

@@ -12,7 +12,7 @@ export interface Group extends Record {
 }
 export interface GroupUser extends Record {
   user: string
-  groep: string
+  group: string
 }
 
 export interface Session extends Record {

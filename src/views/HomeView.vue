@@ -12,7 +12,7 @@
 
       <div class="p-4 bg-base-200 flex items-center rounded-xl" v-for="groep in groepusers">
         <h1 class="flex-1">{{ groep.expand.group.naam }}</h1>
-        <RouterLink :to="`/group/${groep.id}`" class="btn">Open</RouterLink>
+        <RouterLink :to="`/group/${groep.group}`" class="btn">Open</RouterLink>
       </div>
 
       <div class="p-4 bg-base-200 flex items-center rounded-xl" v-for="groep in groepen">
