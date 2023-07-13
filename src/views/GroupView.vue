@@ -160,28 +160,33 @@ export default {
 
       this.newSession.reps = session.reps
     },
+    async getGroupUsers() {
+
+      this.groupUsers = await pb.collection("pushup_groupusers").getFullList({
+        filter: `group = "${this.$route.params?.id}"`,
+        expand: "user, group"
+      })
+      this.groupUsers = this.groupUsers.sort((a, b) => {
+        return this.getTotalReps(b.user) - this.getTotalReps(a.user)
+      })
+
+
+      const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
+      if (groupUser) {
+        this.groupUser = groupUser
+      }
+    },
     del(collection: string, id: string) {
       pb.collection(collection).delete(id)
     }
   },
   async mounted() {
 
+
+
     await this.getSessions()
-
-    this.groupUsers = await pb.collection("pushup_groupusers").getFullList({
-      filter: `group = "${this.$route.params?.id}"`,
-      expand: "user, group"
-    })
-    this.groupUsers = this.groupUsers.sort((a, b) => {
-      return this.getTotalReps(b.user) - this.getTotalReps(a.user)
-    })
-
-
-    const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
-    if (groupUser) {
-      this.groupUser = groupUser
-    }
-
+    await this.getGroupUsers()
+    
     // if (typeof this.$route.params?.id == "string") {
     //   this.groupUser = await pb.collection("pushup_groupusers").getOne<ExtendedGroupUser>(this.$route.params?.id, {
     //     expand: "user, group"
