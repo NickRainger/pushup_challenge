@@ -1,7 +1,12 @@
 <template>
   <main class="p-2">
 
-    <h1 class="text-2xl font-bold px-4 pt-4">{{ groupUser.expand?.group?.naam }}</h1>
+    <div class="flex gap-4 items-center px-2 pt-2">
+      <RouterLink to="/" class="btn btn-square p-2">
+        <chevronLeft class="h-full w-full fill-base-content" />
+      </RouterLink>
+      <h1 class="text-2xl font-bold">{{ groupUser.expand?.group?.naam }}</h1>
+    </div>
 
     <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
 
@@ -88,6 +93,7 @@
 <script lang="ts">
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Group, Session, GroupUser } from '@/types';
+import chevronLeft from "@/assets/chevron-left-solid.vue"
 
 
 
@@ -105,6 +111,9 @@ interface ExtendedSession extends Session {
 }
 
 export default {
+  components: {
+    chevronLeft
+  },
   data: () => ({
     newSession: {
       reps: 0,
