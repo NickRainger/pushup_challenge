@@ -52,7 +52,7 @@
 
 
     <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
-      <canvas id="chart"></canvas>
+      <canvas id="chart" height="300" ></canvas>
     </div>
 
 
