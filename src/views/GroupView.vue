@@ -73,9 +73,10 @@
 
     <div class="flex flex-col gap-2 my-4 bg-base-200 p-4 rounded-xl">
 
-      <div v-for="session in sessions.filter(e => e.expand.groupuser?.user != auth.user?.id)" class="text-xl font-bold ">
+      <!-- <div v-for="session in sessions.filter(e => e.expand.groupuser?.user != auth.user?.id)" class="text-xl font-bold "> -->
+      <div v-for="session in sessions" class="text-xl font-bold ">
 
-        {{ session.expand.groupuser?.expand.user?.username }}, {{ session.reps }} Reps {{ formatTime(session.tijd) }}
+        {{ formatTime(session.tijd) }} - {{ session.expand.groupuser?.expand.user?.username }}, {{ session.reps }} Reps
 
       </div>
     </div>
@@ -129,7 +130,7 @@ export default {
       })
     },
     formatTime(time: number) {
-      return `${Math.floor(time / 60)}:${time % 60}`
+      return `${Math.floor(time / 60)}:${time % 60 < 10 ? "0" : ""}${time % 60}`
     },
     getTotalReps(filter: string): number {
       let total = 0
