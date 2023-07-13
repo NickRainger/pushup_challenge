@@ -4,7 +4,7 @@
 
     <div class="flex gap-2 mb-4 w-full items-center">
       <h1 class="text-2xl font-bold">Hoi</h1>
-      <input class=" input input-sm text-2xl font-bold w-full" type="text" v-model="auth.user!.username"
+      <input v-if="auth.user" class=" input input-sm text-2xl font-bold w-full" type="text" v-model="auth.user.username"
         @change="update('pushup_users', <BaseUser>auth.user)">
     </div>
 

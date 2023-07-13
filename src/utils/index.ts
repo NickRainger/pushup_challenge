@@ -1,3 +1,4 @@
+import { useToast, type ToastPluginApi } from "vue-toast-notification";
 
 export const getDay = (): number => {
   var now = new Date().getTime();
@@ -8,3 +9,34 @@ export const getDay = (): number => {
   const days = Math.floor(elapsedT / msInDay)
   return days
 }
+
+class Toast {
+  toast: ToastPluginApi
+
+  constructor() {
+    this.toast = useToast()
+  }
+  clear() {
+    this.toast.clear()
+  }
+  info(msg: string) {
+    this.toast.info(msg, {
+      duration: 5000,
+      position: "top-right",
+    })
+  }
+  success(msg: string) {
+    this.toast.success(msg, {
+      duration: 5000,
+      position: "top-right",
+    })
+  }
+  error(msg: string) {
+    this.toast.error(msg, {
+      duration: 5000,
+      position: "top-right",
+    })
+  }
+}
+
+export const toast = new Toast()

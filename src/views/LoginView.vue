@@ -48,8 +48,9 @@
 </template>
 
 <script lang="ts">
-
 import { auth, pb } from "@/pocketbase"
+import { toast } from "@/utils"
+import 'vue-toast-notification/dist/theme-sugar.css';
 
 export default {
   data: () => ({
@@ -68,7 +69,9 @@ export default {
     async login() {
 
 
-      pb.collection("pushup_users").authWithPassword(this.form.username, this.form.password)
+      pb.collection("pushup_users").authWithPassword(this.form.username, this.form.password).catch((e) => {
+        toast.error(e)
+      })
 
 
     },
@@ -79,10 +82,14 @@ export default {
         username: this.form.username,
         password: this.form.password,
         passwordConfirm: this.form.password
+      }).catch((e) => {
+        toast.error(e)
       })
 
       if (create) {
-        pb.collection("pushup_users").authWithPassword(this.form.username, this.form.password)
+        pb.collection("pushup_users").authWithPassword(this.form.username, this.form.password).catch((e) => {
+          toast.error(e)
+        })
       }
     }
   }
