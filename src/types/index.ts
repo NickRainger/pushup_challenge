@@ -16,8 +16,7 @@ export interface GroupUser extends Record {
 }
 
 export interface Session extends Record {
-  user: string
-  groep: string
+  groupuser: string
   reps: number
   dag: number
   jaar: number

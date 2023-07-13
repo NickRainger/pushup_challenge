@@ -68,7 +68,8 @@
 
       <div v-for="groupUser, i in groupUsers" class="text-xl font-bold ">
 
-        {{ i + 1 }}. {{ groupUser.expand.user?.username }}, {{ getTotalReps(groupUser.user) }}
+        {{ i + 1 }}. {{ groupUser.expand.user?.username }}, {{ getTotalReps(groupUser.user) }} {{
+          formatTime(groupUser.completedTime) }}
 
       </div>
 
@@ -98,6 +99,7 @@ import chevronLeft from "@/assets/chevron-left-solid.vue"
 
 
 interface ExtendedGroupUser extends GroupUser {
+  completedTime?: number
   expand: {
     user?: BaseUser
     group?: Group
@@ -138,7 +140,8 @@ export default {
         groupuser: this.groupUser.id,
       })
     },
-    formatTime(time: number) {
+    formatTime(time: number | undefined): string {
+      if (!time) { return "" }
       return `${Math.floor(time / 60)}:${time % 60 < 10 ? "0" : ""}${time % 60}`
     },
     getTotalReps(filter: string): number {
@@ -159,16 +162,16 @@ export default {
 
       this.sessions = await pb.collection("pushup_sessies").getFullList<ExtendedSession>({
         filter: `dag = "${new Date().getDate()}" && jaar = "${new Date().getFullYear()}" && maand = "${new Date().getMonth() + 1}"`,
-        sort: "-created",
+        sort: "-tijd",
         expand: "groupuser.user"
       })
 
-      const session = this.sessions.find(e => e.user == auth.user?.id)
-      if (!session) {
-        return
-      }
+      // const session = this.sessions.find(e => e.groupuser == auth.user?.id)
+      // if (!session) {
+      //   return
+      // }
 
-      this.newSession.reps = session.reps
+      // this.newSession.reps = session.reps
     },
     async getGroupUsers() {
 
@@ -176,18 +179,44 @@ export default {
         filter: `group = "${this.$route.params?.id}"`,
         expand: "user, group"
       })
+
+      this.updateGroupUsers()
+    },
+    del(collection: string, id: string) {
+      pb.collection(collection).delete(id)
+    },
+    updateGroupUsers() {
+
+
+      this.groupUsers.forEach(groupUser => {
+        const sessions = this.sessions.reverse().filter(e => e.groupuser == groupUser.id)
+
+        // console.log(session.length);
+        let total = 0
+        sessions.forEach(session => {
+          total += session.reps
+          if (total >= 100) {
+            groupUser.completedTime = session.tijd
+          }
+        })
+      });
+
+
       this.groupUsers = this.groupUsers.sort((a, b) => {
         return this.getTotalReps(b.user) - this.getTotalReps(a.user)
       })
 
+      this.groupUsers = this.groupUsers.sort((a, b) => {
+        if (a.completedTime && b.completedTime) {
+          return a.completedTime - b.completedTime
+        }
+        return 0
+      })
 
       const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
       if (groupUser) {
         this.groupUser = groupUser
       }
-    },
-    del(collection: string, id: string) {
-      pb.collection(collection).delete(id)
     }
   },
   async mounted() {
@@ -205,6 +234,12 @@ export default {
 
     pb.collection("pushup_sessies").subscribe("*", () => {
       this.getSessions()
+      this.updateGroupUsers()
+      // this.getGroupUsers()
+    })
+    pb.collection("pushup_groupusers").subscribe("*", () => {
+      // this.getSessions()
+      this.getGroupUsers()
     })
 
     // this.groupUser = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
