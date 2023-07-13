@@ -34,10 +34,10 @@
 
       <div class="flex w-full">
 
-        <input class="w-full input input-sm" type="number" min="1" required v-model="newSession.reps">
-        <input class="w-full input input-sm" type="number" required v-model="newSession.dag">
-        <input class="w-full input input-sm" type="number" required v-model="newSession.maand">
-        <input class="w-full input input-sm" type="number" required v-model="newSession.jaar">
+        <input class="w-full input input-sm" type="text" min="1" required v-model="newSession.reps">
+        <input class="w-full input input-sm" type="text" required v-model="newSession.dag">
+        <input class="w-full input input-sm" type="text" required v-model="newSession.maand">
+        <input class="w-full input input-sm" type="text" required v-model="newSession.jaar">
       </div>
 
       <button class="btn btn-success btn-sm">Toevoegen</button>
@@ -116,7 +116,7 @@ export default {
   },
   data: () => ({
     newSession: {
-      reps: 0,
+      reps: "",
       dag: new Date().getDate(),
       maand: new Date().getMonth() + 1,
       jaar: new Date().getFullYear()
