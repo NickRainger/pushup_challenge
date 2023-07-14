@@ -11,7 +11,7 @@
             <img :src="`https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${message.user}`" />
 
             <button v-if="message.user == auth.user?.id"
-              class="group-hover/hov:!visible invisible absolute top-0 h-full w-full left-0 flex items-center justify-center material-symbols-sharp text-3xl bg-red-500/50 rounded-full"
+              class="transition-all group-hover/hov:!opacity-100 opacity-0 absolute top-0 h-full w-full left-0 flex items-center justify-center material-symbols-sharp text-3xl bg-red-500/50 rounded-full text-white"
               @click="delMsg(message.id)">
               close</button>
           </div>
@@ -21,7 +21,7 @@
         </div>
 
         <div class="chat-header">
-          {{ message.expand.user.username }}
+          {{ message.expand.groupuser.expand.user.username }}
           <time class="text-xs opacity-50">
             {{ new Date(message.created).toLocaleTimeString() }}
             {{ message.created != message.updated ? "(edited)" : "" }}
@@ -49,99 +49,105 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { auth, pb } from '@/pocketbase';
+import type { BaseUser, Message } from '@/types';
 import { formatTime } from '@/utils';
-import type { ExtendedMessage } from '@/views/GroupView.vue';
+import type { ExtendedGroupUser } from '@/views/GroupView.vue';
+import { onMounted, onUpdated, ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+const props = defineProps<{
+  groupuser: ExtendedGroupUser
+}>()
+
+export interface ExtendedMessage extends Message {
+  expand: {
+    groupuser: ExtendedGroupUser
+  }
+}
+
+const route = useRoute()
 
 let lastScrolled = 0
 
-export default {
-  data: () => ({
-    msg: "",
-    unread: false,
-    msgUpdate: false,
-    messages: <ExtendedMessage[]>[],
-    formatTime,
-    auth
-  }),
-  mounted() {
+let msg = ref("")
+let unread = ref(false)
+let msgUpdate = ref(false)
+let messages = ref<ExtendedMessage[]>([])
 
-    this.getMessages()
+onMounted(() => {
+
+  getMessages()
 
 
-    let objDiv = document.getElementById("messagesScroll");
+  let objDiv = document.getElementById("messagesScroll");
 
+  if (!objDiv) { return }
+  const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
+  lastScrolled = toBottom
+
+  objDiv?.addEventListener("scroll", () => {
     if (!objDiv) { return }
     const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
     lastScrolled = toBottom
 
-    objDiv?.addEventListener("scroll", () => {
-      if (!objDiv) { return }
-      const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
-      lastScrolled = toBottom
+    if (!toBottom) {
+      unread.value = false
+    }
+  })
 
-      if (!toBottom) {
-        this.unread = false
-      }
-    })
+  pb.collection("pushup_messages").subscribe("*", async () => {
+    getMessages()
+  })
+}),
+  onUpdated(() => {
 
-    pb.collection("pushup_messages").subscribe("*", async () => {
-      this.getMessages()
-    })
-  },
-  updated() {
-
-    if (!this.msgUpdate) {
+    if (!msgUpdate.value) {
       return
     }
-    this.msgUpdate = false
+    msgUpdate.value = false
     var objDiv = document.getElementById("messagesScroll");
     if (!objDiv) { return }
 
     if (lastScrolled == 0) {
       objDiv.scrollTop = objDiv.scrollHeight;
     } else {
-      this.unread = true
+      unread.value = true
     }
 
-  },
-  methods: {
-
-    async getMessages() {
-      const messages = await pb.collection("pushup_messages").getFullList<ExtendedMessage>({
-        filter: `group = "${this.$route.params.id}"`,
-        expand: `user`
-      })
-      // messages.reverse()
-      this.messages = messages
-      this.msgUpdate = true
+  })
 
 
-    },
-    async sendMsg() {
 
-      console.log(this.$route.params.id);
+async function getMessages() {
+  messages.value = await pb.collection("pushup_messages").getFullList<ExtendedMessage>({
+    filter: `group = "${route.params.id}"`,
+    expand: `groupuser.user`
+  })
+  // messages.reverse()
+  msgUpdate.value = true
 
-      const msg = await pb.collection("pushup_messages").create({
-        user: auth.user?.id,
-        group: this.$route.params.id,
-        content: this.msg
-      })
-      if (msg) {
-        this.msg = ""
-      }
-    },
-    updateMsg(message: ExtendedMessage) {
 
-      pb.collection("pushup_messages").update(message.id, {
-        content: message.content
-      })
-    },
-    delMsg(id: string) {
-      pb.collection("pushup_messages").delete(id)
-    },
+}
+async function sendMsg() {
+
+  const res = await pb.collection("pushup_messages").create({
+    groupuser: props.groupuser.id,
+    content: msg.value
+  })
+  if (res) {
+    msg.value = ""
   }
+}
+function updateMsg(message: ExtendedMessage) {
+
+  pb.collection("pushup_messages").update(message.id, {
+    content: message.content
+  })
+}
+function delMsg(id: string) {
+  pb.collection("pushup_messages").delete(id)
 }
 
 </script>

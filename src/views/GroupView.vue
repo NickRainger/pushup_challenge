@@ -17,7 +17,7 @@
 
     <Sessions :sessions="<ExtendedSession[]>sessions" />
 
-    <Chat />
+    <Chat :groupuser="<ExtendedGroupUser>groupUser" />
 
   </main>
 </template>
@@ -49,12 +49,6 @@ export interface ExtendedGroupUser extends GroupUser {
 export interface ExtendedSession extends Session {
   expand: {
     groupuser: ExtendedGroupUser
-  }
-}
-
-export interface ExtendedMessage extends Message {
-  expand: {
-    user: BaseUser
   }
 }
 
@@ -122,7 +116,7 @@ async function updateGroupUsers() {
   })
 
   const AgroupUser = groupUsers.value.find(e => e.user == auth.user?.id)
-  
+
   if (AgroupUser) {
     groupUser.value = AgroupUser
   }
