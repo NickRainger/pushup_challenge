@@ -110,12 +110,23 @@
         </div>
 
         <!-- ({{ message.expand.user.username }}) {{ message.content }} -->
+
       </div>
 
-      <form @submit.prevent @submit="sendMsg()" class="join w-full">
+      <!-- <div class="tooltip tooltip-top" :class="{ 'tooltip-open': unread }" data-tip="nieuwe berichten"> -->
+
+
+      <form @submit.prevent @submit="sendMsg()" class="join w-full relative">
+
+        <div v-if="unread"
+          class="badge badge-lg badge-info p-2 absolute top-0 left-1/2  -translate-y-[150%] -translate-x-1/2">Nieuwe
+          berichten</div>
+
         <input class="input input-sm join-item w-full" type="text" required v-model="msg" placeholder="bericht">
         <button class="btn btn-success btn-sm join-item">Sturen</button>
       </form>
+      <!-- </div> -->
+
 
     </div>
 
@@ -187,7 +198,9 @@ export default {
     groupUsers: <ExtendedGroupUser[]>[],
     sessions: <ExtendedSession[]>[],
     messages: <ExtendedMessage[]>[],
-    msg: ""
+    msg: "",
+    unread: false,
+    msgUpdate: false
   }),
   methods: {
     setDay(type: "subtract" | "add" | "today") {
@@ -335,6 +348,7 @@ export default {
       })
       // messages.reverse()
       this.messages = messages
+      this.msgUpdate = true
 
 
     },
@@ -354,15 +368,17 @@ export default {
   },
   updated() {
 
-
+    if (!this.msgUpdate) {
+      return
+    }
+    this.msgUpdate = false
     var objDiv = document.getElementById("messagesScroll");
     if (!objDiv) { return }
 
-    console.log(lastScrolled);
-
-
     if (lastScrolled == 0) {
       objDiv.scrollTop = objDiv.scrollHeight;
+    } else {
+      this.unread = true
     }
 
   },
@@ -395,6 +411,10 @@ export default {
       if (!objDiv) { return }
       const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
       lastScrolled = toBottom
+
+      if (!toBottom) {
+        this.unread = false
+      }
     })
 
     chartUpdate.on("update", (e: { tijden: number[], datasets: { label?: string, data: number[] }[] }) => {
