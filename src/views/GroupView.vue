@@ -171,6 +171,8 @@ class ChartUpdate {
 
 const chartUpdate = new ChartUpdate
 
+let lastScrolled = 0
+
 export default {
   components: {
     chevronLeft
@@ -354,13 +356,14 @@ export default {
 
 
     var objDiv = document.getElementById("messagesScroll");
-    if (!objDiv) {
-      return
-    }
-    console.log(objDiv.scrollTop, objDiv.scrollHeight - objDiv.clientHeight);
-    objDiv.scrollTop = objDiv.scrollHeight;
-    console.log(objDiv.scrollTop, objDiv.scrollHeight - objDiv.clientHeight);
+    if (!objDiv) { return }
 
+    console.log(lastScrolled);
+
+
+    if (lastScrolled == 0) {
+      objDiv.scrollTop = objDiv.scrollHeight;
+    }
 
   },
   async mounted() {
@@ -380,6 +383,19 @@ export default {
         datasets: [],
       }
     });
+
+
+    let objDiv = document.getElementById("messagesScroll");
+
+    if (!objDiv) { return }
+    const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
+    lastScrolled = toBottom
+
+    objDiv?.addEventListener("scroll", () => {
+      if (!objDiv) { return }
+      const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
+      lastScrolled = toBottom
+    })
 
     chartUpdate.on("update", (e: { tijden: number[], datasets: { label?: string, data: number[] }[] }) => {
 
