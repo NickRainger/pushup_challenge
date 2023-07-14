@@ -63,7 +63,9 @@
 
       <div v-for="groupUser, i in groupUsers" class="text-xl font-bold flex items-center gap-2">
 
-        <div v-if="i == 0" class="text-3xl material-symbols-rounded fill"
+        <div
+          v-if="i == 0 && (!groupUsers.some(user => getTotalReps(user.user) == getTotalReps(user.user)) || getTotalReps(groupUser.user) >= 100)"
+          class="text-3xl material-symbols-rounded fill"
           :class="{ 'text-yellow-500': getTotalReps(groupUser.user) >= 100 }" @click="setDay('subtract')">
           star
         </div>
@@ -135,8 +137,8 @@
 
           </div> -->
 
-          <input v-if="message.user == auth.user?.id" class="chat-bubble chat-bubble-primary w-full"
-            v-model="message.content" type="text" @change="updateMsg(<ExtendedMessage>message)">
+          <textarea v-if="message.user == auth.user?.id" class="chat-bubble chat-bubble-primary w-full"
+            v-model="message.content" type="text" @change="updateMsg(<ExtendedMessage>message)" />
 
           <!-- </div> -->
 
@@ -174,7 +176,6 @@ import Chart from "chart.js/auto"
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Group, Session, GroupUser, Message } from '@/types';
 import chevronLeft from "@/assets/chevron-left-solid.vue"
-import { data } from "autoprefixer";
 
 function getHexFromString(seed: string): string {
   return Math.floor((Math.abs(Math.sin(parseInt(seed, 36)) * 16777215))).toString(16)
@@ -205,7 +206,7 @@ class ChartUpdate {
   constructor() {
     this.listeners = []
   }
-  emit(event: string, data: any) {
+  emit(event: string, data?: any) {
     this.listeners.filter(e => e.event == event).forEach(event => {
       event.cb(data)
     })
@@ -238,7 +239,7 @@ export default {
     msgUpdate: false
   }),
   methods: {
-    setDay(type: "subtract" | "add" | "today") {
+    async setDay(type: "subtract" | "add" | "today") {
 
       if (type == 'subtract') {
         this.date.setDate(this.date.getDate() - 1)
@@ -248,7 +249,13 @@ export default {
         this.date = new Date()
       }
 
-      this.getSessions()
+      this.sessions.length = 0
+      chartUpdate.emit("clear")
+      this.groupUsers.forEach(groupUser => {
+        delete groupUser.completedTime
+      })
+      await this.getSessions()
+      this.updateGroupUsers()
 
       this.selectedDate = this.date.toLocaleDateString()
     },
@@ -293,7 +300,7 @@ export default {
     },
     async getGroupUsers() {
 
-      this.groupUsers = await pb.collection("pushup_groupusers").getFullList({
+      this.groupUsers = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
         filter: `group = "${this.$route.params?.id}"`,
         expand: "user, group"
       })
@@ -305,12 +312,11 @@ export default {
     },
     updateGroupUsers() {
 
-
       this.groupUsers.forEach(groupUser => {
         const sessions = [...this.sessions.filter(e => e.groupuser == groupUser.id)].reverse()
         // console.log(session.length);
         let total = 0
-        sessions.every(session => {
+        const res = sessions.every(session => {
           total += session.reps
           if (total >= 100) {
             groupUser.completedTime = session.tijd
@@ -318,23 +324,38 @@ export default {
           }
           return true
         })
+
+        // if (res) {
+        //   delete groupUser.completedTime
+        // }
+
       });
 
-      this.groupUsers = this.groupUsers.sort((a, b) => {
-        return Math.min(this.getTotalReps(b.user), 100) - Math.min(this.getTotalReps(a.user), 100)
-      })
+      console.log(this.groupUsers.map(e => e.expand.user.username));
 
       this.groupUsers = this.groupUsers.sort((a, b) => {
-        if (a.completedTime && b.completedTime) {
-          return a.completedTime - b.completedTime
-        }
-        return 0
+        a.completedTime && b.completedTime
+
+        // console.log(a.expand.user.username, a.completedTime, b.expand.user.username, b.completedTime, a.completedTime - b.completedTime);
+
+        return (a.completedTime || 24 * 60) - (b.completedTime || 24 * 60)
+
+        // return -100
+      })
+
+      console.log(this.groupUsers.map(e => e.expand.user.username));
+
+      this.groupUsers = this.groupUsers.sort((a, b) => {
+        console.log(this.getTotalReps(b.user), this.getTotalReps(a.user));
+
+        return Math.min(this.getTotalReps(b.user), 100) - Math.min(this.getTotalReps(a.user), 100)
       })
 
       const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
       if (groupUser) {
         this.groupUser = groupUser
       }
+
     },
     renderChart() {
 
@@ -462,10 +483,14 @@ export default {
     })
 
     chartUpdate.on("update", (e: { tijden: number[], datasets: { label?: string, data: number[] }[] }) => {
-
       chart.data.labels = <never[]>e.tijden.map(e => this.formatTime(e))
       chart.data.datasets = e.datasets
+      chart.update()
+    })
 
+    chartUpdate.on("clear", (e: { tijden: number[], datasets: { label?: string, data: number[] }[] }) => {
+      chart.data.labels = []
+      chart.data.datasets = []
       chart.update()
     })
 
