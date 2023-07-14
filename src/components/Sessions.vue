@@ -10,23 +10,13 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 
 import { formatTime } from '@/utils';
 import type { ExtendedSession } from '@/views/GroupView.vue';
-import type { PropType } from 'vue';
 
-export default {
-  props: {
-    sessions: {
-      type: Array as PropType<ExtendedSession[]>,
-      required: true
-    },
-  },
-  data: () => ({
-    formatTime
-  })
-
-}
+const props = defineProps<{
+  sessions: ExtendedSession[]
+}>()
 
 </script>

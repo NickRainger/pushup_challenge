@@ -8,7 +8,8 @@
 
   <main class="p-2 grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-6">
 
-    <UserSessions :sessions="<ExtendedSession[]>sessions" :date="date" :groupUser="<ExtendedGroupUser>groupUser" @datechange="dateChangeEvent" />
+    <UserSessions :sessions="<ExtendedSession[]>sessions" :date="date" :groupUser="<ExtendedGroupUser>groupUser"
+      @datechange="dateChangeEvent" />
 
     <Chart :sessions="<ExtendedSession[]>sessions" :groupUsers="<ExtendedGroupUser[]>groupUsers" />
 
@@ -21,7 +22,7 @@
   </main>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Group, Session, GroupUser, Message } from '@/types';
 import chevronLeft from "@/assets/chevron-left-solid.vue"
@@ -32,7 +33,10 @@ import Chart from "@/components/Chart.vue";
 import Leaderboard from "@/components/Leaderboard.vue";
 import Sessions from "@/components/Sessions.vue";
 import Chat from "@/components/Chat.vue";
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
+const route = useRoute()
 
 export interface ExtendedGroupUser extends GroupUser {
   completedTime?: number
@@ -54,99 +58,89 @@ export interface ExtendedMessage extends Message {
   }
 }
 
+const date = new Date()
 
-export default {
-  components: {
-    UserSessions,
-    chevronLeft,
-    Chart,
-    Leaderboard,
-    Sessions,
-    Chat
-  },
-  data: function () {
-    return {
-      date: new Date(),
-      auth,
-      // group: <Group>{},
-      groupUser: <ExtendedGroupUser>{},
-      groupUsers: <ExtendedGroupUser[]>[],
-      sessions: <ExtendedSession[]>[],
-    }
-  },
-  methods: {
-    async dateChangeEvent() {
+let groupUser = ref(<ExtendedGroupUser>{})
+let groupUsers = ref(<ExtendedGroupUser[]>[])
+let sessions = ref(<ExtendedSession[]>[])
 
-      chartUpdate.emit("clear")
-      this.groupUsers.forEach(groupUser => {
-        delete groupUser.completedTime
-      })
-      await this.getSessions()
-      this.updateGroupUsers()
-    },
-    async getSessions() {
+async function dateChangeEvent() {
+
+  sessions.value.length = 0
+  chartUpdate.emit("clear")
+  groupUsers.value.forEach(groupUser => {
+    delete groupUser.completedTime
+  })
+  await getSessions()
+  updateGroupUsers()
+}
+
+async function getSessions() {
 
 
-      this.sessions = await pb.collection("pushup_sessies").getFullList<ExtendedSession>({
-        filter: `groupuser.group = "${this.$route.params?.id}" && dag = "${this.date.getDate()}" && jaar = "${this.date.getFullYear()}" && maand = "${this.date.getMonth() + 1}"`,
-        sort: "-tijd",
-        expand: "groupuser.user"
-      })
+  sessions.value = await pb.collection("pushup_sessies").getFullList<ExtendedSession>({
+    filter: `groupuser.group = "${route.params?.id}" && dag = "${date.getDate()}" && jaar = "${date.getFullYear()}" && maand = "${date.getMonth() + 1}"`,
+    sort: "-tijd",
+    expand: "groupuser.user"
+  })
 
 
-    },
-    async getGroupUsers() {
+}
 
-      this.groupUsers = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
-        filter: `group = "${this.$route.params?.id}"`,
-        expand: "user, group"
-      })
+async function getGroupUsers() {
 
-      this.updateGroupUsers()
-    },
-    updateGroupUsers() {
+  groupUsers.value = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
+    filter: `group = "${route.params?.id}"`,
+    expand: "user, group"
+  })
 
-      this.groupUsers.forEach(groupUser => {
-        const sessions = [...this.sessions.filter(e => e.groupuser == groupUser.id)].reverse()
-        let total = 0
-        sessions.every(session => {
-          total += session.reps
-          if (total >= 100) {
-            groupUser.completedTime = session.tijd
-            return false
-          }
-          return true
-        })
-      });
+  updateGroupUsers()
+}
 
-      console.log(this.groupUsers.map(e => e.expand.user.username));
+async function updateGroupUsers() {
 
-      this.groupUsers = this.groupUsers.sort((a, b) => {
-        a.completedTime && b.completedTime
-        return (a.completedTime || 24 * 60) - (b.completedTime || 24 * 60)
-      })
-      console.log(this.groupUsers.map(e => e.expand.user.username));
-      this.groupUsers = this.groupUsers.sort((a, b) => {
-        return Math.min(getTotalReps(b.user, <ExtendedSession[]>this.sessions), 100) - Math.min(getTotalReps(a.user, <ExtendedSession[]>this.sessions), 100)
-      })
-      const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
-      if (groupUser) {
-        this.groupUser = groupUser
+  groupUsers.value.forEach(groupUser => {
+    const Asessions = [...sessions.value.filter(e => e.groupuser == groupUser.id)].reverse()
+    let total = 0
+    Asessions.every(Asessions => {
+      total += Asessions.reps
+      if (total >= 100) {
+        groupUser.completedTime = Asessions.tijd
+        return false
       }
-    },
-  },
-  async mounted() {
-    await this.getSessions()
-    await this.getGroupUsers()
+      return true
+    })
+  });
 
-    pb.collection("pushup_sessies").subscribe("*", async () => {
-      await this.getSessions()
-      this.updateGroupUsers()
-    })
-    pb.collection("pushup_groupusers").subscribe("*", async () => {
-      await this.getGroupUsers()
-    })
+  groupUsers.value = groupUsers.value.sort((a, b) => {
+    a.completedTime && b.completedTime
+    return (a.completedTime || 24 * 60) - (b.completedTime || 24 * 60)
+  })
+
+  groupUsers.value = groupUsers.value.sort((a, b) => {
+    return Math.min(getTotalReps(b.user, <ExtendedSession[]>sessions.value), 100) - Math.min(getTotalReps(a.user, <ExtendedSession[]>sessions.value), 100)
+  })
+
+  const AgroupUser = groupUsers.value.find(e => e.user == auth.user?.id)
+  
+  if (AgroupUser) {
+    groupUser.value = AgroupUser
   }
 }
+
+onMounted(async () => {
+
+  await getSessions()
+  await getGroupUsers()
+
+  pb.collection("pushup_sessies").subscribe("*", async () => {
+    await getSessions()
+    updateGroupUsers()
+  })
+  pb.collection("pushup_groupusers").subscribe("*", async () => {
+    await getGroupUsers()
+  })
+})
+
 
 </script>

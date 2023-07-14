@@ -29,27 +29,13 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { formatTime, getTotalReps } from '@/utils';
 import type { ExtendedSession, ExtendedGroupUser } from '@/views/GroupView.vue';
-import type { PropType } from 'vue';
 
-export default {
-  props: {
-    sessions: {
-      type: Array as PropType<ExtendedSession[]>,
-      required: true
-    },
-    groupUsers: {
-      type: Array as PropType<ExtendedGroupUser[]>,
-      required: true
-    }
-  },
-  data: () => ({
-    formatTime,
-    getTotalReps
-  })
-
-}
+const props = defineProps<{
+  sessions: ExtendedSession[],
+  groupUsers: ExtendedGroupUser[]
+}>()
 
 </script>

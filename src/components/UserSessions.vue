@@ -19,7 +19,8 @@
 
     </div>
 
-    <div v-for="session in sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).reverse()"  :key="session.id" class="flex">
+    <div v-for="session in sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).reverse()" :key="session.id"
+      class="flex">
       <h1 class="text-xl font-semibold text-white">{{ formatTime(session.tijd) }}</h1>
       <pre class="text-xl font-semibold text-white"> - </pre>
       <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }} </h1>
@@ -42,73 +43,53 @@
   </div>
 </template>
 
-<script lang="ts">
-import type { PropType } from 'vue'
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import type { ExtendedSession, ExtendedGroupUser } from '@/views/GroupView.vue';
 import { auth, pb } from '@/pocketbase';
 import { formatTime, getTotalReps } from '@/utils';
 
+const props = defineProps<{
+  sessions: ExtendedSession[],
+  groupUser: ExtendedGroupUser,
+  date: Date
+}>()
 
-export default {
-  props: {
-    sessions: {
-      type: Array as PropType<ExtendedSession[]>,
-      required: true
-    },
-    date: {
-      type: Object as PropType<Date>,
-      required: true
-    },
-    groupUser: {
-      type: Object as PropType<ExtendedGroupUser>,
-      required: true
-    },
-  },
-  data: () => ({
-    auth,
-    selectedDate: "",
-    newSession: <number | string>"",
-    formatTime,
-    getTotalReps
-  }),
-  methods: {
-    del(id: string) {
-      pb.collection("pushup_sessies").delete(id)
-    },
-    addSession() {
-      pb.collection("pushup_sessies").create({
-        reps: this.newSession,
-        dag: this.date.getDate(),
-        maand: this.date.getMonth() + 1,
-        jaar: this.date.getFullYear(),
-        tijd: new Date().getMinutes() + new Date().getHours() * 60,
-        groupuser: this.groupUser.id,
-      })
-    },
+let selectedDate = ref("")
+let newSession = ref<number | string>("")
 
-    async setDay(type: "subtract" | "add" | "today") {
-
-      if (type == 'subtract') {
-        this.date.setDate(this.date.getDate() - 1)
-      } else if (type == 'add') {
-        this.date.setDate(this.date.getDate() + 1)
-      } else if (type == 'today') {
-        this.date.setTime(Date.now())
-      }
-
-      this.sessions.length = 0
-
-      this.$emit("datechange")
-
-      this.selectedDate = this.date.toLocaleDateString()
-
-    },
-
-  },
-  mounted() {
-
-    this.selectedDate = this.date.toLocaleDateString()
-  }
+function del(id: string) {
+  pb.collection("pushup_sessies").delete(id)
 }
+function addSession() {
+  pb.collection("pushup_sessies").create({
+    reps: newSession.value,
+    dag: props.date.getDate(),
+    maand: props.date.getMonth() + 1,
+    jaar: props.date.getFullYear(),
+    tijd: new Date().getMinutes() + new Date().getHours() * 60,
+    groupuser: props.groupUser.id,
+  })
+}
+
+const emit = defineEmits<{
+  datechange: []
+}>()
+
+async function setDay(type: "subtract" | "add" | "today") {
+
+  if (type == 'subtract') {
+    props.date.setDate(props.date.getDate() - 1)
+  } else if (type == 'add') {
+    props.date.setDate(props.date.getDate() + 1)
+  } else if (type == 'today') {
+    props.date.setTime(Date.now())
+  }
+  emit("datechange")
+  selectedDate.value = props.date.toLocaleDateString()
+}
+onMounted(() => {
+  selectedDate.value = props.date.toLocaleDateString()
+})
 
 </script>
