@@ -101,6 +101,13 @@
 
         <div v-for="message in messages" class="chat"
           :class="[message.user == auth.user?.id ? 'chat-end' : 'chat-start']">
+
+          <div class="chat-image avatar">
+            <div class="w-10 rounded-full">
+              <img :src="`https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${message.user}`" />
+            </div>
+          </div>
+
           <div class="chat-header">
             {{ message.expand.user.username }}
             <time class="text-xs opacity-50">{{ new Date(message.created).toLocaleTimeString() }}</time>
