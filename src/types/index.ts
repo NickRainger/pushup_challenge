@@ -22,3 +22,8 @@ export interface Session extends Record {
   jaar: number
   tijd: number
 }
+export interface Message extends Record {
+  group: string
+  user: string
+  content: string
+}

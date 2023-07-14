@@ -68,12 +68,15 @@
           star
         </div>
 
-        <div v-else-if="getTotalReps(groupUser.user) >= 100" class="text-3xl material-symbols-rounded fill text-emerald-500">
+        <div v-else-if="getTotalReps(groupUser.user) >= 100"
+          class="text-3xl material-symbols-rounded fill text-emerald-500">
           done_all
         </div>
 
-        {{ i + 1 }}. {{ groupUser.expand.user?.username }}, {{ getTotalReps(groupUser.user) }} {{
-          formatTime(groupUser.completedTime) }}
+        <div class="text-2xl ">
+          {{ i + 1 }}. {{ groupUser.expand.user?.username }}, {{ getTotalReps(groupUser.user) }} {{
+            formatTime(groupUser.completedTime) }}
+        </div>
 
       </div>
 
@@ -92,13 +95,39 @@
     </div>
 
 
+    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
+
+      <div class="flex-1 overflow-y-scroll">
+
+        <div v-for="message in messages" class="chat"
+          :class="[message.user == auth.user?.id ? 'chat-end' : 'chat-start']">
+          <div class="chat-header">
+            {{ message.expand.user.username }}
+            <time class="text-xs opacity-50">{{ new Date(message.created).toLocaleTimeString() }}</time>
+          </div>
+          <div class="chat-bubble" :class="{ 'chat-bubble-info': message.user == auth.user?.id }">{{ message.content }}
+          </div>
+        </div>
+
+
+        <!-- ({{ message.expand.user.username }}) {{ message.content }} -->
+      </div>
+
+      <form @submit.prevent @submit="sendMsg()" class="join w-full">
+        <input class="input input-sm join-item w-full" type="text" required v-model="msg" placeholder="bericht">
+        <button class="btn btn-success btn-sm join-item">Sturen</button>
+      </form>
+
+    </div>
+
+
   </main>
 </template>
 
 <script lang="ts">
 import Chart, { type Chart as ChartType } from "chart.js/auto"
 import { auth, pb } from '@/pocketbase';
-import type { BaseUser, Group, Session, GroupUser } from '@/types';
+import type { BaseUser, Group, Session, GroupUser, Message } from '@/types';
 import chevronLeft from "@/assets/chevron-left-solid.vue"
 import { data } from "autoprefixer";
 
@@ -117,6 +146,12 @@ interface ExtendedGroupUser extends GroupUser {
 interface ExtendedSession extends Session {
   expand: {
     groupuser: ExtendedGroupUser
+  }
+}
+
+interface ExtendedMessage extends Message {
+  expand: {
+    user: BaseUser
   }
 }
 
@@ -150,6 +185,8 @@ export default {
     groupUser: <ExtendedGroupUser>{},
     groupUsers: <ExtendedGroupUser[]>[],
     sessions: <ExtendedSession[]>[],
+    messages: <ExtendedMessage[]>[],
+    msg: ""
   }),
   methods: {
     setDay(type: "subtract" | "add" | "today") {
@@ -289,6 +326,24 @@ export default {
         datasets.push(userDataSet)
       })
       chartUpdate.emit("update", { datasets, tijden })
+    },
+    async getMessages() {
+      const messages = await pb.collection("pushup_messages").getFullList<ExtendedMessage>({
+        filter: `group = "${this.$route.params.id}"`,
+        expand: `user`
+      })
+      messages.reverse()
+      this.messages = messages
+    },
+    sendMsg() {
+
+      console.log(this.$route.params.id);
+
+      pb.collection("pushup_messages").create({
+        user: auth.user?.id,
+        group: this.$route.params.id,
+        content: this.msg
+      })
     }
   },
   async mounted() {
@@ -297,6 +352,7 @@ export default {
 
     await this.getSessions()
     await this.getGroupUsers()
+    this.getMessages()
 
     const ctx = <HTMLCanvasElement>document.getElementById("chart")
 
@@ -329,6 +385,9 @@ export default {
       this.renderChart()
     })
 
+    pb.collection("pushup_messages").subscribe("*", async () => {
+      this.getMessages()
+    })
   }
 }
 
