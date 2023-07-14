@@ -95,9 +95,9 @@
     </div>
 
 
-    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
+    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl max-h-[512px]">
 
-      <div class="flex-1 overflow-y-scroll">
+      <div class="flex-1 overflow-y-scroll" id="messagesScroll">
 
         <div v-for="message in messages" class="chat"
           :class="[message.user == auth.user?.id ? 'chat-end' : 'chat-start']">
@@ -271,14 +271,14 @@ export default {
       });
 
       this.groupUsers = this.groupUsers.sort((a, b) => {
+        return Math.min(this.getTotalReps(b.user), 100) - Math.min(this.getTotalReps(a.user), 100)
+      })
+
+      this.groupUsers = this.groupUsers.sort((a, b) => {
         if (a.completedTime && b.completedTime) {
           return a.completedTime - b.completedTime
         }
         return 0
-      })
-
-      this.groupUsers = this.groupUsers.sort((a, b) => {
-        return Math.min(this.getTotalReps(b.user), 100) - Math.min(this.getTotalReps(a.user), 100)
       })
 
       const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
@@ -333,6 +333,8 @@ export default {
       })
       // messages.reverse()
       this.messages = messages
+
+
     },
     async sendMsg() {
 
@@ -347,6 +349,19 @@ export default {
         this.msg = ""
       }
     }
+  },
+  updated() {
+
+
+    var objDiv = document.getElementById("messagesScroll");
+    if (!objDiv) {
+      return
+    }
+    console.log(objDiv.scrollTop, objDiv.scrollHeight - objDiv.clientHeight);
+    objDiv.scrollTop = objDiv.scrollHeight;
+    console.log(objDiv.scrollTop, objDiv.scrollHeight - objDiv.clientHeight);
+
+
   },
   async mounted() {
 
