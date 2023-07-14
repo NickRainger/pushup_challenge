@@ -37,22 +37,23 @@
 
       <h1 class="text-2xl font-bold">totaal: {{ getTotalReps(auth.user!.id) }}</h1>
 
+      <form @submit="addSession()" @submit.prevent class="flex flex-col gap-2">
+
+        <h1 class="text-xl font-semibold">reps Toevoegen</h1>
+
+        <div class="join w-full">
+          <input class="input input-sm join-item w-1/2" type="text" required v-model="newSession" placeholder="reps">
+          <button class="btn btn-success btn-sm join-item w-1/2">Toevoegen</button>
+        </div>
+
+      </form>
+
     </div>
 
-    <form @submit="addSession()" @submit.prevent class="flex flex-col gap-2 p-4 bg-base-200 rounded-xl">
-
-      <h1 class="text-xl font-semibold">reps</h1>
-
-      <div class="join w-full">
-        <input class="input input-sm join-item w-1/2" type="text" required v-model="newSession" placeholder="reps">
-        <button class="btn btn-success btn-sm join-item w-1/2">Toevoegen</button>
-      </div>
-
-    </form>
 
 
     <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
-      <canvas id="chart" height="300" ></canvas>
+      <canvas id="chart" height="300"></canvas>
     </div>
 
 
@@ -143,7 +144,6 @@ export default {
   }),
   methods: {
     setDay(type: "subtract" | "add" | "today") {
-      console.log(this.date.toLocaleDateString());
 
       if (type == 'subtract') {
         this.date.setDate(this.date.getDate() - 1)
