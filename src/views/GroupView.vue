@@ -99,21 +99,49 @@
 
       <div class="flex-1 overflow-y-scroll" id="messagesScroll">
 
-        <div v-for="message in messages" class="chat"
+        <div v-for="message in messages" class="chat relative"
           :class="[message.user == auth.user?.id ? 'chat-end' : 'chat-start']">
 
           <div class="chat-image avatar">
-            <div class="w-10 rounded-full">
+            <div class="w-10 rounded-full group/hov">
               <img :src="`https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${message.user}`" />
+
+              <button v-if="message.user == auth.user?.id"
+                class="group-hover/hov:!visible invisible absolute top-0 h-full w-full left-0 flex items-center justify-center material-symbols-sharp text-3xl bg-red-500/50 rounded-full"
+                @click="delMsg(message.id)">
+                close</button>
             </div>
+
+
+            <!-- <div class="">123</div> -->
           </div>
 
           <div class="chat-header">
             {{ message.expand.user.username }}
-            <time class="text-xs opacity-50">{{ new Date(message.created).toLocaleTimeString() }}</time>
+            <time class="text-xs opacity-50">
+              {{ new Date(message.created).toLocaleTimeString() }}
+              {{ message.created != message.updated ? "(edited)" : "" }}
+            </time>
           </div>
-          <div class="chat-bubble" :class="{ 'chat-bubble-info': message.user == auth.user?.id }">{{ message.content }}
-          </div>
+
+
+          <!-- <div class="indicator" >
+            <span class="indicator-item indicator-start badge badge-secondary"></span> -->
+          <span class="badge top-0 left-0 absolute"></span>
+
+          <!-- <div class="chat-bubble chat-bubble-primary w-full p-0">
+
+            <input type="text" class="input input-ghost">
+
+          </div> -->
+
+          <input v-if="message.user == auth.user?.id" class="chat-bubble chat-bubble-primary w-full"
+            v-model="message.content" type="text" @change="updateMsg(<ExtendedMessage>message)">
+
+          <!-- </div> -->
+
+
+          <div v-else class="chat-bubble">{{ message.content }} </div>
         </div>
 
         <!-- ({{ message.expand.user.username }}) {{ message.content }} -->
@@ -371,7 +399,16 @@ export default {
       if (msg) {
         this.msg = ""
       }
-    }
+    },
+    updateMsg(message: ExtendedMessage) {
+
+      pb.collection("pushup_messages").update(message.id, {
+        content: message.content
+      })
+    },
+    delMsg(id: string) {
+      pb.collection("pushup_messages").delete(id)
+    },
   },
   updated() {
 
