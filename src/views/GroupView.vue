@@ -12,7 +12,7 @@
 
       <div class="flex items-center justify-center gap-4">
 
-        <button class="btn btn-square text-3xl material-symbols-outlined" @click="setDay('subtract')">
+        <button class="btn btn-square text-3xl material-symbols-sharp fill" @click="setDay('subtract')">
           horizontal_rule
         </button>
 
@@ -22,7 +22,7 @@
           vandaag
         </button>
 
-        <button class="btn btn-square text-3xl material-symbols-outlined" @click="setDay('add')">
+        <button class="btn btn-square text-3xl material-symbols-sharp" @click="setDay('add')">
           add
         </button>
 
@@ -61,7 +61,16 @@
 
       <h1 class="text-xl font-bold">Leaderboard</h1>
 
-      <div v-for="groupUser, i in groupUsers" class="text-xl font-bold ">
+      <div v-for="groupUser, i in groupUsers" class="text-xl font-bold flex items-center gap-2">
+
+        <div v-if="i == 0" class="text-3xl material-symbols-rounded fill"
+          :class="{ 'text-yellow-500': getTotalReps(groupUser.user) >= 100 }" @click="setDay('subtract')">
+          star
+        </div>
+
+        <div v-else-if="getTotalReps(groupUser.user) >= 100" class="text-3xl material-symbols-rounded fill text-emerald-500">
+          done_all
+        </div>
 
         {{ i + 1 }}. {{ groupUser.expand.user?.username }}, {{ getTotalReps(groupUser.user) }} {{
           formatTime(groupUser.completedTime) }}
