@@ -109,7 +109,6 @@
           </div>
         </div>
 
-
         <!-- ({{ message.expand.user.username }}) {{ message.content }} -->
       </div>
 
@@ -125,7 +124,7 @@
 </template>
 
 <script lang="ts">
-import Chart, { type Chart as ChartType } from "chart.js/auto"
+import Chart from "chart.js/auto"
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Group, Session, GroupUser, Message } from '@/types';
 import chevronLeft from "@/assets/chevron-left-solid.vue"
@@ -335,15 +334,18 @@ export default {
       messages.reverse()
       this.messages = messages
     },
-    sendMsg() {
+    async sendMsg() {
 
       console.log(this.$route.params.id);
 
-      pb.collection("pushup_messages").create({
+      const msg = await pb.collection("pushup_messages").create({
         user: auth.user?.id,
         group: this.$route.params.id,
         content: this.msg
       })
+      if (msg) {
+        this.msg = ""
+      }
     }
   },
   async mounted() {
