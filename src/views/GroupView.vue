@@ -331,7 +331,7 @@ export default {
         filter: `group = "${this.$route.params.id}"`,
         expand: `user`
       })
-      messages.reverse()
+      // messages.reverse()
       this.messages = messages
     },
     async sendMsg() {
