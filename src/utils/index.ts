@@ -1,4 +1,5 @@
 import { useToast, type ToastPluginApi } from "vue-toast-notification";
+import type { ExtendedSession } from '@/views/GroupView.vue';
 
 export const getDay = (): number => {
   var now = new Date().getTime();
@@ -9,6 +10,45 @@ export const getDay = (): number => {
   const days = Math.floor(elapsedT / msInDay)
   return days
 }
+
+
+
+export const formatTime = (time: number | undefined): string => {
+  if (!time) { return "" }
+  return `${Math.floor(time / 60)}:${time % 60 < 10 ? "0" : ""}${time % 60}`
+}
+
+export const getHexFromString = (seed: string): string => {
+  return Math.floor((Math.abs(Math.sin(parseInt(seed, 36)) * 16777215))).toString(16)
+}
+
+
+export const getTotalReps = (filter: string, sessions: ExtendedSession[]) => {
+
+  let total = 0
+  sessions.filter(e => e.expand.groupuser?.user == filter).forEach(session => {
+    total += session.reps
+  })
+  return total
+}
+
+
+class ChartUpdate {
+  listeners: { event: string, cb: Function }[]
+  constructor() {
+    this.listeners = []
+  }
+  emit(event: string, data?: any) {
+    this.listeners.filter(e => e.event == event).forEach(event => {
+      event.cb(data)
+    })
+  }
+  on(event: string, cb: Function) {
+    this.listeners.push({ event, cb })
+  }
+}
+
+export const chartUpdate = new ChartUpdate()
 
 class Toast {
   toast: ToastPluginApi

@@ -8,180 +8,33 @@
 
   <main class="p-2 grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-6">
 
-    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
+    <UserSessions :sessions="<ExtendedSession[]>sessions" :date="date" :groupUser="<ExtendedGroupUser>groupUser" @datechange="dateChangeEvent" />
 
-      <div class="flex items-center justify-center gap-4">
+    <Chart :sessions="<ExtendedSession[]>sessions" :groupUsers="<ExtendedGroupUser[]>groupUsers" />
 
-        <button class="btn btn-square text-3xl material-symbols-sharp fill" @click="setDay('subtract')">
-          horizontal_rule
-        </button>
+    <Leaderboard :sessions="<ExtendedSession[]>sessions" :groupUsers="<ExtendedGroupUser[]>groupUsers" />
 
-        <h1 class="font-bold"> {{ selectedDate }}</h1>
-        <button class="btn font-bold" :class="{ 'btn-disabled': new Date().toLocaleDateString() == selectedDate }"
-          @click="setDay('today')">
-          vandaag
-        </button>
+    <Sessions :sessions="<ExtendedSession[]>sessions" />
 
-        <button class="btn btn-square text-3xl material-symbols-sharp" @click="setDay('add')">
-          add
-        </button>
-
-      </div>
-
-      <div v-for="session in sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).reverse()" class="flex">
-        <h1 class="text-xl font-semibold text-white">{{ formatTime(session.tijd) }}</h1>
-        <pre class="text-xl font-semibold text-white"> - </pre>
-        <h1 class="text-xl font-semibold flex-1">Reps: {{ session.reps }} </h1>
-        <button @click="del('pushup_sessies', session.id)" class="btn btn-error btn-sm">Del</button>
-      </div>
-
-      <h1 class="text-2xl font-bold">totaal: {{ getTotalReps(auth.user!.id) }}</h1>
-
-      <form @submit="addSession()" @submit.prevent class="flex flex-col gap-2">
-
-        <h1 class="text-xl font-semibold">reps Toevoegen</h1>
-
-        <div class="join w-full">
-          <input class="input input-sm join-item w-1/2" type="text" required v-model="newSession" placeholder="reps">
-          <button class="btn btn-success btn-sm join-item w-1/2">Toevoegen</button>
-        </div>
-
-      </form>
-
-    </div>
-
-
-
-    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
-      <canvas id="chart" height="300"></canvas>
-    </div>
-
-
-    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
-
-      <h1 class="text-xl font-bold">Leaderboard</h1>
-
-      <div v-for="groupUser, i in groupUsers" class="text-xl font-bold flex items-center gap-2">
-
-        <div
-          v-if="i == 0 && (!groupUsers.some(user => getTotalReps(user.user) == getTotalReps(user.user)) || getTotalReps(groupUser.user) >= 100)"
-          class="text-3xl material-symbols-rounded fill"
-          :class="{ 'text-yellow-500': getTotalReps(groupUser.user) >= 100 }" @click="setDay('subtract')">
-          star
-        </div>
-
-        <div v-else-if="getTotalReps(groupUser.user) >= 100"
-          class="text-3xl material-symbols-rounded fill text-emerald-500">
-          done_all
-        </div>
-
-        <div class="text-2xl ">
-          {{ i + 1 }}. {{ groupUser.expand.user?.username }}, {{ getTotalReps(groupUser.user) }} {{
-            formatTime(groupUser.completedTime) }}
-        </div>
-
-      </div>
-
-
-    </div>
-
-
-    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
-
-      <!-- <div v-for="session in sessions.filter(e => e.expand.groupuser?.user != auth.user?.id)" class="text-xl font-bold "> -->
-      <div v-for="session in sessions" class="text-xl font-bold ">
-
-        {{ formatTime(session.tijd) }} - {{ session.expand.groupuser?.expand.user?.username }}, {{ session.reps }} Reps
-
-      </div>
-    </div>
-
-
-    <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl max-h-[512px]">
-
-      <div class="flex-1 overflow-y-scroll" id="messagesScroll">
-
-        <div v-for="message in messages" class="chat relative"
-          :class="[message.user == auth.user?.id ? 'chat-end' : 'chat-start']">
-
-          <div class="chat-image avatar">
-            <div class="w-10 rounded-full group/hov">
-              <img :src="`https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${message.user}`" />
-
-              <button v-if="message.user == auth.user?.id"
-                class="group-hover/hov:!visible invisible absolute top-0 h-full w-full left-0 flex items-center justify-center material-symbols-sharp text-3xl bg-red-500/50 rounded-full"
-                @click="delMsg(message.id)">
-                close</button>
-            </div>
-
-
-            <!-- <div class="">123</div> -->
-          </div>
-
-          <div class="chat-header">
-            {{ message.expand.user.username }}
-            <time class="text-xs opacity-50">
-              {{ new Date(message.created).toLocaleTimeString() }}
-              {{ message.created != message.updated ? "(edited)" : "" }}
-            </time>
-          </div>
-
-
-          <!-- <div class="indicator" >
-            <span class="indicator-item indicator-start badge badge-secondary"></span> -->
-          <span class="badge top-0 left-0 absolute"></span>
-
-          <!-- <div class="chat-bubble chat-bubble-primary w-full p-0">
-
-            <input type="text" class="input input-ghost">
-
-          </div> -->
-
-          <textarea v-if="message.user == auth.user?.id" class="chat-bubble chat-bubble-primary w-full"
-            v-model="message.content" type="text" @change="updateMsg(<ExtendedMessage>message)" />
-
-          <!-- </div> -->
-
-
-          <div v-else class="chat-bubble">{{ message.content }} </div>
-        </div>
-
-        <!-- ({{ message.expand.user.username }}) {{ message.content }} -->
-
-      </div>
-
-      <!-- <div class="tooltip tooltip-top" :class="{ 'tooltip-open': unread }" data-tip="nieuwe berichten"> -->
-
-
-      <form @submit.prevent @submit="sendMsg()" class="join w-full relative">
-
-        <div v-if="unread"
-          class="badge badge-lg badge-info p-2 absolute top-0 left-1/2  -translate-y-[150%] -translate-x-1/2">Nieuwe
-          berichten</div>
-
-        <input class="input input-sm join-item w-full" type="text" required v-model="msg" placeholder="bericht">
-        <button class="btn btn-success btn-sm join-item">Sturen</button>
-      </form>
-      <!-- </div> -->
-
-
-    </div>
-
+    <Chat />
 
   </main>
 </template>
 
 <script lang="ts">
-import Chart from "chart.js/auto"
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Group, Session, GroupUser, Message } from '@/types';
 import chevronLeft from "@/assets/chevron-left-solid.vue"
+import { formatTime, chartUpdate, getTotalReps } from '@/utils';
 
-function getHexFromString(seed: string): string {
-  return Math.floor((Math.abs(Math.sin(parseInt(seed, 36)) * 16777215))).toString(16)
-}
+import UserSessions from "@/components/UserSessions.vue";
+import Chart from "@/components/Chart.vue";
+import Leaderboard from "@/components/Leaderboard.vue";
+import Sessions from "@/components/Sessions.vue";
+import Chat from "@/components/Chat.vue";
 
-interface ExtendedGroupUser extends GroupUser {
+
+export interface ExtendedGroupUser extends GroupUser {
   completedTime?: number
   expand: {
     user: BaseUser
@@ -189,102 +42,47 @@ interface ExtendedGroupUser extends GroupUser {
   }
 }
 
-interface ExtendedSession extends Session {
+export interface ExtendedSession extends Session {
   expand: {
     groupuser: ExtendedGroupUser
   }
 }
 
-interface ExtendedMessage extends Message {
+export interface ExtendedMessage extends Message {
   expand: {
     user: BaseUser
   }
 }
 
-class ChartUpdate {
-  listeners: { event: string, cb: Function }[]
-  constructor() {
-    this.listeners = []
-  }
-  emit(event: string, data?: any) {
-    this.listeners.filter(e => e.event == event).forEach(event => {
-      event.cb(data)
-    })
-  }
-  on(event: string, cb: Function) {
-    this.listeners.push({ event, cb })
-  }
-}
-
-const chartUpdate = new ChartUpdate
-
-let lastScrolled = 0
 
 export default {
   components: {
-    chevronLeft
+    UserSessions,
+    chevronLeft,
+    Chart,
+    Leaderboard,
+    Sessions,
+    Chat
   },
-  data: () => ({
-    newSession: <number | string>"",
-    date: new Date(),
-    selectedDate: "",
-    auth,
-    // group: <Group>{},
-    groupUser: <ExtendedGroupUser>{},
-    groupUsers: <ExtendedGroupUser[]>[],
-    sessions: <ExtendedSession[]>[],
-    messages: <ExtendedMessage[]>[],
-    msg: "",
-    unread: false,
-    msgUpdate: false
-  }),
+  data: function () {
+    return {
+      date: new Date(),
+      auth,
+      // group: <Group>{},
+      groupUser: <ExtendedGroupUser>{},
+      groupUsers: <ExtendedGroupUser[]>[],
+      sessions: <ExtendedSession[]>[],
+    }
+  },
   methods: {
-    async setDay(type: "subtract" | "add" | "today") {
+    async dateChangeEvent() {
 
-      if (type == 'subtract') {
-        this.date.setDate(this.date.getDate() - 1)
-      } else if (type == 'add') {
-        this.date.setDate(this.date.getDate() + 1)
-      } else if (type == 'today') {
-        this.date = new Date()
-      }
-
-      this.sessions.length = 0
       chartUpdate.emit("clear")
       this.groupUsers.forEach(groupUser => {
         delete groupUser.completedTime
       })
       await this.getSessions()
       this.updateGroupUsers()
-
-      this.selectedDate = this.date.toLocaleDateString()
-    },
-    addSession() {
-      pb.collection("pushup_sessies").create({
-        reps: this.newSession,
-        dag: this.date.getDate(),
-        maand: this.date.getMonth() + 1,
-        jaar: this.date.getFullYear(),
-        tijd: new Date().getMinutes() + new Date().getHours() * 60,
-        groupuser: this.groupUser.id,
-      })
-    },
-    formatTime(time: number | undefined): string {
-      if (!time) { return "" }
-      return `${Math.floor(time / 60)}:${time % 60 < 10 ? "0" : ""}${time % 60}`
-    },
-    getTotalReps(filter: string): number {
-      let total = 0
-
-      // console.log(this.sessions?.[0]?.expand.groupuser?.user, filter);
-
-      this.sessions.filter(e => e.expand.groupuser?.user == filter).forEach(session => {
-        total += session.reps
-      })
-
-      // console.log(total);
-
-      return total
     },
     async getSessions() {
 
@@ -295,7 +93,6 @@ export default {
         expand: "groupuser.user"
       })
 
-      this.renderChart()
 
     },
     async getGroupUsers() {
@@ -307,16 +104,12 @@ export default {
 
       this.updateGroupUsers()
     },
-    del(collection: string, id: string) {
-      pb.collection(collection).delete(id)
-    },
     updateGroupUsers() {
 
       this.groupUsers.forEach(groupUser => {
         const sessions = [...this.sessions.filter(e => e.groupuser == groupUser.id)].reverse()
-        // console.log(session.length);
         let total = 0
-        const res = sessions.every(session => {
+        sessions.every(session => {
           total += session.reps
           if (total >= 100) {
             groupUser.completedTime = session.tijd
@@ -324,191 +117,34 @@ export default {
           }
           return true
         })
-
-        // if (res) {
-        //   delete groupUser.completedTime
-        // }
-
       });
 
       console.log(this.groupUsers.map(e => e.expand.user.username));
 
       this.groupUsers = this.groupUsers.sort((a, b) => {
         a.completedTime && b.completedTime
-
-        // console.log(a.expand.user.username, a.completedTime, b.expand.user.username, b.completedTime, a.completedTime - b.completedTime);
-
         return (a.completedTime || 24 * 60) - (b.completedTime || 24 * 60)
-
-        // return -100
       })
-
       console.log(this.groupUsers.map(e => e.expand.user.username));
-
       this.groupUsers = this.groupUsers.sort((a, b) => {
-        console.log(this.getTotalReps(b.user), this.getTotalReps(a.user));
-
-        return Math.min(this.getTotalReps(b.user), 100) - Math.min(this.getTotalReps(a.user), 100)
+        return Math.min(getTotalReps(b.user, <ExtendedSession[]>this.sessions), 100) - Math.min(getTotalReps(a.user, <ExtendedSession[]>this.sessions), 100)
       })
-
       const groupUser = this.groupUsers.find(e => e.user == auth.user?.id)
       if (groupUser) {
         this.groupUser = groupUser
       }
-
     },
-    renderChart() {
-
-      const tijden: number[] = []
-
-      const first = [...this.sessions].reverse()?.[0]?.tijd
-      const last = [...this.sessions]?.[0]?.tijd
-
-      const start = Math.floor(first / 10) * 10 - 10
-      const end = Math.ceil(last / 10) * 10 + 10
-
-      for (let i = start; i < end; i += 10) {
-        tijden.push(i)
-      }
-
-      const datasets: { label?: string, data: number[] }[] = []
-
-      this.groupUsers.forEach(groupuser => {
-
-        const backgroundColor = `#${getHexFromString(groupuser.expand.user.username)}80`
-        const borderColor = `#${getHexFromString(groupuser.expand.user.username)}`
-
-        const userDataSet: { label?: string, data: number[], backgroundColor: string, borderColor: string } = {
-          label: groupuser.expand.user.username,
-          data: [],
-          backgroundColor,
-          borderColor
-        }
-
-        tijden.forEach((tijd) => {
-          userDataSet.data.push(userDataSet.data[userDataSet.data.length - 1] || 0)
-          this.sessions.filter(e => e.expand.groupuser.user == groupuser.user).forEach((session) => {
-            if (session.tijd >= tijd && session.tijd < tijd + 10) {
-              userDataSet.data[userDataSet.data.length - 1] += session.reps
-            }
-          })
-        })
-        datasets.push(userDataSet)
-      })
-      chartUpdate.emit("update", { datasets, tijden })
-    },
-    async getMessages() {
-      const messages = await pb.collection("pushup_messages").getFullList<ExtendedMessage>({
-        filter: `group = "${this.$route.params.id}"`,
-        expand: `user`
-      })
-      // messages.reverse()
-      this.messages = messages
-      this.msgUpdate = true
-
-
-    },
-    async sendMsg() {
-
-      console.log(this.$route.params.id);
-
-      const msg = await pb.collection("pushup_messages").create({
-        user: auth.user?.id,
-        group: this.$route.params.id,
-        content: this.msg
-      })
-      if (msg) {
-        this.msg = ""
-      }
-    },
-    updateMsg(message: ExtendedMessage) {
-
-      pb.collection("pushup_messages").update(message.id, {
-        content: message.content
-      })
-    },
-    delMsg(id: string) {
-      pb.collection("pushup_messages").delete(id)
-    },
-  },
-  updated() {
-
-    if (!this.msgUpdate) {
-      return
-    }
-    this.msgUpdate = false
-    var objDiv = document.getElementById("messagesScroll");
-    if (!objDiv) { return }
-
-    if (lastScrolled == 0) {
-      objDiv.scrollTop = objDiv.scrollHeight;
-    } else {
-      this.unread = true
-    }
-
   },
   async mounted() {
-
-    this.selectedDate = this.date.toLocaleDateString()
-
     await this.getSessions()
     await this.getGroupUsers()
-    this.getMessages()
-
-    const ctx = <HTMLCanvasElement>document.getElementById("chart")
-
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [],
-      }
-    });
-
-
-    let objDiv = document.getElementById("messagesScroll");
-
-    if (!objDiv) { return }
-    const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
-    lastScrolled = toBottom
-
-    objDiv?.addEventListener("scroll", () => {
-      if (!objDiv) { return }
-      const toBottom = objDiv.scrollHeight - objDiv.clientHeight - objDiv.scrollTop
-      lastScrolled = toBottom
-
-      if (!toBottom) {
-        this.unread = false
-      }
-    })
-
-    chartUpdate.on("update", (e: { tijden: number[], datasets: { label?: string, data: number[] }[] }) => {
-      chart.data.labels = <never[]>e.tijden.map(e => this.formatTime(e))
-      chart.data.datasets = e.datasets
-      chart.update()
-    })
-
-    chartUpdate.on("clear", (e: { tijden: number[], datasets: { label?: string, data: number[] }[] }) => {
-      chart.data.labels = []
-      chart.data.datasets = []
-      chart.update()
-    })
-
-    this.renderChart()
 
     pb.collection("pushup_sessies").subscribe("*", async () => {
       await this.getSessions()
       this.updateGroupUsers()
-      // this.getGroupUsers()
     })
     pb.collection("pushup_groupusers").subscribe("*", async () => {
-      // this.getSessions()
       await this.getGroupUsers()
-      this.renderChart()
-    })
-
-    pb.collection("pushup_messages").subscribe("*", async () => {
-      this.getMessages()
     })
   }
 }
