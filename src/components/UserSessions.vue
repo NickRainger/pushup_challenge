@@ -81,7 +81,7 @@ function activateConfetti() {
   console.log(Math.random() * 0.4 + 0.3,);
 
   myConfetti({
-    particleCount: 200,
+    particleCount: 100,
     spread: 160,
     startVelocity: 30,
 
@@ -96,9 +96,15 @@ function activateConfetti() {
 
 function addSession() {
 
-  if ((props.groupUser.totalReps || 0) < 100 && ((props.groupUser.totalReps || 0) + Number(newSession.value) >= 100)) {
+  // if ((props.groupUser.totalReps || 0) < 100 && ((props.groupUser.totalReps || 0) + Number(newSession.value) >= 100)) {
+  const interval = setInterval(() => {
     activateConfetti()
-  }
+  }, 200,)
+
+  setTimeout(() => {
+    clearInterval(interval)
+  }, 3000);
+  // }
 
   pb.collection("pushup_sessies").create({
     reps: newSession.value,

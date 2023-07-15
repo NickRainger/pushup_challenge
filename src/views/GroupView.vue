@@ -41,28 +41,6 @@ import Sessions from "@/components/Sessions.vue";
 import Chat from "@/components/Chat.vue";
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-// import ConfettiGenerator from "confetti-js";
-
-
-// import { loadFull } from "tsparticles";
-// import type { Engine } from "tsparticles-engine";
-// import { loadConfettiPreset } from "tsparticles-preset-confetti";
-
-
-
-
-// import Confetti from "@/confetti.min.js"
-
-// const defaults = { startVelocity: 30, spread: 360, ticks: 20, zIndex: 0 };
-
-
-
-// confetti(
-// 	Object.assign({}, defaults, {
-// 		particleCount,
-// 		origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-// 	})
-// );
 
 const route = useRoute()
 
@@ -80,14 +58,6 @@ export interface ExtendedSession extends Session {
     groupuser: ExtendedGroupUser
   }
 }
-
-// const options = {
-//   /* custom options */
-// };
-
-// async function particlesInit(engine: Engine): Promise<void> {
-//   await loadFull(engine);
-// }
 
 const date = new Date()
 
