@@ -27,7 +27,7 @@
       <button @click="del(session.id)" class="btn btn-error btn-sm">Del</button>
     </div>
 
-    <h1 class="text-2xl font-bold">totaal: {{ getTotalReps(auth.user!.id, <ExtendedSession[]>sessions) }}</h1>
+    <h1 class="text-2xl font-bold">totaal: {{ groupUser.totalReps }}</h1>
 
     <form @submit="addSession()" @submit.prevent class="flex flex-col gap-2">
 
@@ -41,13 +41,16 @@
     </form>
 
   </div>
+
+  <canvas class="w-screen absolute top-0 left-0 h-screen pointer-events-none z-50" id="my-canvas"></canvas>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import type { ExtendedSession, ExtendedGroupUser } from '@/views/GroupView.vue';
 import { auth, pb } from '@/pocketbase';
-import { formatTime, getTotalReps } from '@/utils';
+import { formatTime } from '@/utils';
+import confetti from "canvas-confetti"
 
 const props = defineProps<{
   sessions: ExtendedSession[],
@@ -61,9 +64,41 @@ let newSession = ref<number | string>("")
 function del(id: string) {
   pb.collection("pushup_sessies").delete(id)
 }
+
+function activateConfetti() {
+
+  var myCanvas = <HTMLCanvasElement | null>document.getElementById('my-canvas');
+
+  if (!myCanvas) {
+    return
+  }
+
+  var myConfetti = confetti.create(myCanvas, {
+    resize: true,
+    useWorker: true
+  });
+
+  console.log(Math.random() * 0.4 + 0.3,);
+
+  myConfetti({
+    particleCount: 200,
+    spread: 160,
+    startVelocity: 30,
+
+
+    origin: {
+      x: Math.random() * 0.4 + 0.3,
+      // since they fall down, start a bit higher than random
+      y: Math.random() * 0.4 + 0.3,
+    }
+  });
+}
+
 function addSession() {
 
-
+  if ((props.groupUser.totalReps || 0) < 100 && ((props.groupUser.totalReps || 0) + Number(newSession.value) >= 100)) {
+    activateConfetti()
+  }
 
   pb.collection("pushup_sessies").create({
     reps: newSession.value,
@@ -92,6 +127,7 @@ async function setDay(type: "subtract" | "add" | "today") {
   selectedDate.value = props.date.toLocaleDateString()
 }
 onMounted(() => {
+
   selectedDate.value = props.date.toLocaleDateString()
 })
 

@@ -23,14 +23,14 @@ export const getHexFromString = (seed: string): string => {
 }
 
 
-export const getTotalReps = (filter: string, sessions: ExtendedSession[]) => {
+// export const getTotalReps = (filter: string, sessions: ExtendedSession[]) => {
 
-  let total = 0
-  sessions.filter(e => e.expand.groupuser?.user == filter).forEach(session => {
-    total += session.reps
-  })
-  return total
-}
+//   let total = 0
+//   sessions.filter(e => e.expand.groupuser?.user == filter).forEach(session => {
+//     total += session.reps
+//   })
+//   return total
+// }
 
 
 class ChartUpdate {

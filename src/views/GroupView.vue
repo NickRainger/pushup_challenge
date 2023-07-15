@@ -15,9 +15,15 @@
 
     <Leaderboard :sessions="<ExtendedSession[]>sessions" :groupUsers="<ExtendedGroupUser[]>groupUsers" />
 
+
     <Sessions :sessions="<ExtendedSession[]>sessions" />
 
     <Chat :groupuser="<ExtendedGroupUser>groupUser" />
+
+    <!-- <vue-particles color="#dedede"></vue-particles> -->
+
+    <!-- <button id="test"></button> -->
+
 
   </main>
 </template>
@@ -26,7 +32,7 @@
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Group, Session, GroupUser, Message } from '@/types';
 import chevronLeft from "@/assets/chevron-left-solid.vue"
-import { formatTime, chartUpdate, getTotalReps } from '@/utils';
+import { formatTime, chartUpdate } from '@/utils';
 
 import UserSessions from "@/components/UserSessions.vue";
 import Chart from "@/components/Chart.vue";
@@ -35,11 +41,34 @@ import Sessions from "@/components/Sessions.vue";
 import Chat from "@/components/Chat.vue";
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+// import ConfettiGenerator from "confetti-js";
+
+
+// import { loadFull } from "tsparticles";
+// import type { Engine } from "tsparticles-engine";
+// import { loadConfettiPreset } from "tsparticles-preset-confetti";
+
+
+
+
+// import Confetti from "@/confetti.min.js"
+
+// const defaults = { startVelocity: 30, spread: 360, ticks: 20, zIndex: 0 };
+
+
+
+// confetti(
+// 	Object.assign({}, defaults, {
+// 		particleCount,
+// 		origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+// 	})
+// );
 
 const route = useRoute()
 
 export interface ExtendedGroupUser extends GroupUser {
   completedTime?: number
+  totalReps?: number
   expand: {
     user: BaseUser
     group: Group
@@ -52,6 +81,14 @@ export interface ExtendedSession extends Session {
   }
 }
 
+// const options = {
+//   /* custom options */
+// };
+
+// async function particlesInit(engine: Engine): Promise<void> {
+//   await loadFull(engine);
+// }
+
 const date = new Date()
 
 let groupUser = ref(<ExtendedGroupUser>{})
@@ -62,9 +99,6 @@ async function dateChangeEvent() {
 
   sessions.value.length = 0
   chartUpdate.emit("clear")
-  groupUsers.value.forEach(groupUser => {
-    delete groupUser.completedTime
-  })
   await getSessions()
   updateGroupUsers()
 }
@@ -80,7 +114,6 @@ async function getSessions() {
 
 
 }
-
 async function getGroupUsers() {
 
   groupUsers.value = await pb.collection("pushup_groupusers").getFullList<ExtendedGroupUser>({
@@ -94,35 +127,51 @@ async function getGroupUsers() {
 async function updateGroupUsers() {
 
   groupUsers.value.forEach(groupUser => {
+
     const Asessions = [...sessions.value.filter(e => e.groupuser == groupUser.id)].reverse()
-    let total = 0
-    Asessions.every(Asessions => {
-      total += Asessions.reps
-      if (total >= 100) {
-        groupUser.completedTime = Asessions.tijd
-        return false
+
+    groupUser.completedTime = undefined
+    groupUser.totalReps = 0
+
+    Asessions.forEach(Asessions => {
+      
+      if (typeof groupUser.totalReps == "undefined") {
+        return
       }
-      return true
+      groupUser.totalReps += Asessions.reps
+
+      if (groupUser.totalReps >= 100 && !groupUser.completedTime) {
+        groupUser.completedTime = Asessions.tijd
+      }
     })
+
   });
 
   groupUsers.value = groupUsers.value.sort((a, b) => {
-    a.completedTime && b.completedTime
+    // a.completedTime && b.completedTime
     return (a.completedTime || 24 * 60) - (b.completedTime || 24 * 60)
   })
 
   groupUsers.value = groupUsers.value.sort((a, b) => {
-    return Math.min(getTotalReps(b.user, <ExtendedSession[]>sessions.value), 100) - Math.min(getTotalReps(a.user, <ExtendedSession[]>sessions.value), 100)
+    return Math.min(b.totalReps || 0, 100) - Math.min(a.totalReps || 0, 100)
   })
 
   const AgroupUser = groupUsers.value.find(e => e.user == auth.user?.id)
 
   if (AgroupUser) {
+
+    console.log(AgroupUser);
+
     groupUser.value = AgroupUser
   }
 }
 
 onMounted(async () => {
+
+  // var confettiSettings = { target: 'my-canvas' };
+  // var confetti = new ConfettiGenerator(confettiSettings);
+  // confetti.render();
+
 
   await getSessions()
   await getGroupUsers()
