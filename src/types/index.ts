@@ -23,7 +23,6 @@ export interface Session extends Record {
   tijd: number
 }
 export interface Message extends Record {
-  group: string
-  user: string
+  groupuser: string
   content: string
 }

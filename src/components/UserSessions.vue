@@ -3,8 +3,8 @@
 
     <div class="flex items-center justify-center gap-4">
 
-      <button class="btn btn-square text-3xl material-symbols-sharp fill" @click="setDay('subtract')">
-        horizontal_rule
+      <button class="btn btn-square text-3xl material-symbols-rounded" @click="setDay('subtract')">
+        arrow_back_ios
       </button>
 
       <h1 class="font-bold"> {{ selectedDate }}</h1>
@@ -13,8 +13,8 @@
         vandaag
       </button>
 
-      <button class="btn btn-square text-3xl material-symbols-sharp" @click="setDay('add')">
-        add
+      <button class="btn btn-square text-3xl material-symbols-rounded" @click="setDay('add')">
+        arrow_forward_ios
       </button>
 
     </div>

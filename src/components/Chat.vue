@@ -4,13 +4,13 @@
     <div class="flex-1 overflow-y-scroll" id="messagesScroll">
 
       <div v-for="message in messages" :key="message.id" class="chat relative"
-        :class="[message.user == auth.user?.id ? 'chat-end' : 'chat-start']">
+        :class="[message.expand.groupuser.user == auth.user?.id ? 'chat-end' : 'chat-start']">
 
         <div class="chat-image avatar">
           <div class="w-10 rounded-full group/hov">
-            <img :src="`https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${message.user}`" />
+            <img :src="`https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${message.expand.groupuser.user}`" />
 
-            <button v-if="message.user == auth.user?.id"
+            <button v-if="message.expand.groupuser.user == auth.user?.id"
               class="transition-all group-hover/hov:!opacity-100 opacity-0 absolute top-0 h-full w-full left-0 flex items-center justify-center material-symbols-sharp text-3xl bg-red-500/50 rounded-full text-white"
               @click="delMsg(message.id)">
               close</button>
@@ -28,7 +28,7 @@
           </time>
         </div>
 
-        <textarea v-if="message.user == auth.user?.id" class="chat-bubble chat-bubble-primary w-full"
+        <textarea v-if="message.expand.groupuser.user == auth.user?.id" class="chat-bubble chat-bubble-primary w-full"
           v-model="message.content" type="text" @change="updateMsg(<ExtendedMessage>message)" />
 
         <div v-else class="chat-bubble">{{ message.content }} </div>
@@ -122,8 +122,9 @@ onMounted(() => {
 
 async function getMessages() {
   messages.value = await pb.collection("pushup_messages").getFullList<ExtendedMessage>({
-    filter: `group = "${route.params.id}"`,
-    expand: `groupuser.user`
+    filter: `groupuser.group = "${route.params.id}"`,
+    expand: `groupuser.user`,
+    sort: "+created"
   })
   // messages.reverse()
   msgUpdate.value = true
