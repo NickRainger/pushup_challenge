@@ -96,7 +96,7 @@ function activateConfetti() {
 
 function addSession() {
 
-  // if ((props.groupUser.totalReps || 0) < 100 && ((props.groupUser.totalReps || 0) + Number(newSession.value) >= 100)) {
+  if ((props.groupUser.totalReps || 0) < 100 && ((props.groupUser.totalReps || 0) + Number(newSession.value) >= 100)) {
   const interval = setInterval(() => {
     activateConfetti()
   }, 200,)
@@ -104,7 +104,7 @@ function addSession() {
   setTimeout(() => {
     clearInterval(interval)
   }, 3000);
-  // }
+  }
 
   pb.collection("pushup_sessies").create({
     reps: newSession.value,
