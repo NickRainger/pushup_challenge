@@ -28,16 +28,6 @@ export interface Message extends Record {
 }
 
 
-
-
-
-
-// export interface ExtendedGroupUser extends GroupUser {
-//   expand: {
-//     group: Group,
-//   }
-// }
-
 export interface ExtendedGroupUser extends GroupUser {
   completedTime?: number
   totalReps?: number

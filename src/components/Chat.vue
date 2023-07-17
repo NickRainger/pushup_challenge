@@ -1,6 +1,8 @@
 <template>
   <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl max-h-[512px]">
 
+    <h1 class="text-2xl font-bold">Chat</h1>
+
     <div class="flex-1 overflow-y-scroll" id="messagesScroll">
 
       <div v-for="message in messages" :key="message.id" class="chat relative"

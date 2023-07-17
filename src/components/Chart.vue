@@ -1,5 +1,6 @@
 <template>
   <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
+    <h1 class="text-2xl font-bold">Grafiek</h1>
     <canvas id="chart" height="300"></canvas>
   </div>
 </template>

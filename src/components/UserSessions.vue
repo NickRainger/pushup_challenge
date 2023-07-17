@@ -1,9 +1,10 @@
 <template>
   <div class="flex flex-col gap-2 bg-base-200 p-4 rounded-xl">
+    <h1 class="text-2xl font-bold">Gebruiker Sessies</h1>
 
     <div class="flex items-center justify-center gap-4">
 
-      <button class="btn btn-square text-3xl material-symbols-rounded" @click="setDay('subtract')">
+      <button class="btn btn-square text-3xl material-symbols-rounded" @click="setDay('subtract')" :class="{ 'btn-disabled': day == 1 }">
         arrow_back_ios
       </button>
 
@@ -55,6 +56,7 @@ import store from "@/store"
 
 const props = defineProps<{
   date: Date
+  day: number
 }>()
 
 let selectedDate = ref("")
