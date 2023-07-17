@@ -1,5 +1,5 @@
 import { useToast, type ToastPluginApi } from "vue-toast-notification";
-import type { ExtendedSession } from '@/views/GroupView.vue';
+import type { ExtendedSession } from '@/types';
 
 export const getDay = (): number => {
   var now = new Date().getTime();
