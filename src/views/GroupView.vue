@@ -3,7 +3,7 @@
     <RouterLink to="/" class="btn btn-square p-2">
       <chevronLeft class="h-full w-full fill-base-content" />
     </RouterLink>
-    <h1 class="text-2xl font-bold">{{ store.groupUser.expand?.group?.naam }}</h1>
+    <h1 class="text-2xl font-bold">{{ store.groupUser.expand?.group?.naam }}. dag {{ getDaysDiff() }} / 31</h1>
   </div>
 
   <main class="p-2 grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-6">
@@ -13,8 +13,6 @@
     <Leaderboard />
     <Sessions />
     <Chat />
-
-    {{ getDaysDiff() }}
 
   </main>
 </template>
@@ -56,8 +54,7 @@ function getDaysDiff() {
   now.setHours(0, 0, 0, 0)
   start.setHours(0, 0, 0, 0)
 
-  console.log((now.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
-
+  return (now.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
 }
 
 async function dateChangeEvent() {
@@ -86,7 +83,6 @@ async function getGroupUsers() {
     expand: "user, group"
   })
 
-  updateGroupUsers()
 }
 
 async function updateGroupUsers() {
@@ -141,12 +137,15 @@ onMounted(async () => {
   await getSessions()
   await getGroupUsers()
 
+  updateGroupUsers()
+
   pb.collection("pushup_sessies").subscribe("*", async () => {
     await getSessions()
     updateGroupUsers()
   })
   pb.collection("pushup_groupusers").subscribe("*", async () => {
     await getGroupUsers()
+    updateGroupUsers()
   })
 })
 
