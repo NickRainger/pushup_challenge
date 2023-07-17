@@ -54,7 +54,7 @@ function getDaysDiff() {
   now.setHours(0, 0, 0, 0)
   start.setHours(0, 0, 0, 0)
 
-  return (now.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
+  return (now.getTime() - start.getTime()) / (24 * 60 * 60 * 1000) + 1
 }
 
 async function dateChangeEvent() {
