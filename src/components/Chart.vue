@@ -10,18 +10,15 @@
 import Chart from "chart.js/auto"
 import { chartUpdate, formatTime, getHexFromString } from "@/utils";
 import { computed, onMounted, watch } from "vue";
-import type { ExtendedSession, ExtendedGroupUser } from "@/views/GroupView.vue";
+// import type { ExtendedSession, ExtendedGroupUser } from "@/types";
 
-const props = defineProps<{
-  sessions: ExtendedSession[],
-  groupUsers: ExtendedGroupUser[]
-}>()
+import store from "@/store"
 
-watch(() => props.groupUsers.length, () => {
+watch(() => store.groupUsers.length, () => {
   renderChart()
 })
 
-watch(() => props.sessions.length, () => {
+watch(() => store.sessions.length, () => {
   renderChart()
 })
 
@@ -29,8 +26,8 @@ function renderChart() {
 
   const tijden: number[] = []
 
-  const first = [...props.sessions].reverse()?.[0]?.tijd
-  const last = [...props.sessions]?.[0]?.tijd
+  const first = [...store.sessions].reverse()?.[0]?.tijd
+  const last = [...store.sessions]?.[0]?.tijd
 
   const start = Math.floor(first / 10) * 10 - 10
   const end = Math.ceil(last / 10) * 10 + 10
@@ -41,7 +38,7 @@ function renderChart() {
 
   const datasets: { label?: string, data: number[] }[] = []
 
-  props.groupUsers.forEach(groupuser => {
+  store.groupUsers.forEach(groupuser => {
 
     const backgroundColor = `#${getHexFromString(groupuser.expand.user.username)}80`
     const borderColor = `#${getHexFromString(groupuser.expand.user.username)}`
@@ -55,7 +52,7 @@ function renderChart() {
 
     tijden.forEach((tijd) => {
       userDataSet.data.push(userDataSet.data[userDataSet.data.length - 1] || 0)
-      props.sessions.filter(e => e.expand.groupuser.user == groupuser.user).forEach((session) => {
+      store.sessions.filter(e => e.expand.groupuser.user == groupuser.user).forEach((session) => {
         if (session.tijd >= tijd && session.tijd < tijd + 10) {
           userDataSet.data[userDataSet.data.length - 1] += session.reps
         }

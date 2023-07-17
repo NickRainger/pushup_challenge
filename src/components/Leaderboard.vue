@@ -3,10 +3,10 @@
 
     <h1 class="text-xl font-bold">Leaderboard</h1>
 
-    <div v-for="groupUser, i in groupUsers" :key="groupUser.id" class="text-xl font-bold flex items-center gap-2">
+    <div v-for="groupUser, i in store.groupUsers" :key="groupUser.id" class="text-xl font-bold flex items-center gap-2">
 
       <div
-        v-if="i == 0 && groupUser.totalReps != 0 && (!groupUsers.some(user => { return user.id == groupUser.id ? false : groupUser.totalReps == user.totalReps }) || (groupUser.totalReps || 0) >= 100)"
+        v-if="i == 0 && groupUser.totalReps != 0 && (!store.groupUsers.some(user => { return user.id == groupUser.id ? false : groupUser.totalReps == user.totalReps }) || (groupUser.totalReps || 0) >= 100)"
         class="text-3xl material-symbols-rounded fill" :class="{ 'text-yellow-500': (groupUser.totalReps || 0) >= 100 }">
         star
       </div>
@@ -29,11 +29,6 @@
 
 <script setup lang="ts">
 import { formatTime } from '@/utils';
-import type { ExtendedSession, ExtendedGroupUser } from '@/views/GroupView.vue';
-
-const props = defineProps<{
-  sessions: ExtendedSession[],
-  groupUsers: ExtendedGroupUser[]
-}>()
+import store from "@/store"
 
 </script>

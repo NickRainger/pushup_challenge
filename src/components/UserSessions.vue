@@ -13,13 +13,13 @@
         vandaag
       </button>
 
-      <button class="btn btn-square text-3xl material-symbols-rounded" @click="setDay('add')">
+      <button class="btn btn-square text-3xl material-symbols-rounded" @click="setDay('add')" :class="{ 'btn-disabled': new Date().toLocaleDateString() == selectedDate }">
         arrow_forward_ios
       </button>
 
     </div>
 
-    <div v-for="session in sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).reverse()" :key="session.id"
+    <div v-for="session in store.sessions.filter(e => e.expand.groupuser?.user == auth.user?.id).reverse()" :key="session.id"
       class="flex">
       <h1 class="text-xl font-semibold text-base-content">{{ formatTime(session.tijd) }}</h1>
       <pre class="text-xl font-semibold"> - </pre>
@@ -27,7 +27,7 @@
       <button @click="del(session.id)" class="btn btn-error btn-sm">Del</button>
     </div>
 
-    <h1 class="text-2xl font-bold">totaal: {{ groupUser.totalReps }}</h1>
+    <h1 class="text-2xl font-bold">totaal: {{ store.groupUser.totalReps }}</h1>
 
     <form @submit="addSession()" @submit.prevent class="flex flex-col gap-2">
 
@@ -47,14 +47,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import type { ExtendedSession, ExtendedGroupUser } from '@/views/GroupView.vue';
 import { auth, pb } from '@/pocketbase';
 import { formatTime } from '@/utils';
 import confetti from "canvas-confetti"
 
+import store from "@/store"
+
 const props = defineProps<{
-  sessions: ExtendedSession[],
-  groupUser: ExtendedGroupUser,
   date: Date
 }>()
 
@@ -88,7 +87,6 @@ function activateConfetti() {
 
     origin: {
       x: Math.random() * 0.4 + 0.3,
-      // since they fall down, start a bit higher than random
       y: Math.random() * 0.4 + 0.3,
     }
   });
@@ -112,7 +110,7 @@ function addSession() {
     maand: props.date.getMonth() + 1,
     jaar: props.date.getFullYear(),
     tijd: new Date().toLocaleDateString() == selectedDate.value ? new Date().getMinutes() + new Date().getHours() * 60 : 1440,
-    groupuser: props.groupUser.id,
+    groupuser: store.groupUser.id,
   })
 }
 

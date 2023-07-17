@@ -26,3 +26,29 @@ export interface Message extends Record {
   groupuser: string
   content: string
 }
+
+
+
+
+
+
+// export interface ExtendedGroupUser extends GroupUser {
+//   expand: {
+//     group: Group,
+//   }
+// }
+
+export interface ExtendedGroupUser extends GroupUser {
+  completedTime?: number
+  totalReps?: number
+  expand: {
+    user: BaseUser
+    group: Group
+  }
+}
+
+export interface ExtendedSession extends Session {
+  expand: {
+    groupuser: ExtendedGroupUser
+  }
+}

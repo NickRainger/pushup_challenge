@@ -7,11 +7,11 @@
         :class="[message.expand.groupuser.user == auth.user?.id ? 'chat-end' : 'chat-start']">
 
         <div class="chat-image avatar">
-          <div class="w-10 rounded-full group/hov">
+          <div class="w-10 rounded-lg group/hov">
             <img :src="`https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${message.expand.groupuser.user}`" />
 
             <button v-if="message.expand.groupuser.user == auth.user?.id"
-              class="transition-all group-hover/hov:!opacity-100 opacity-0 absolute top-0 h-full w-full left-0 flex items-center justify-center material-symbols-sharp text-3xl bg-red-500/50 rounded-full text-white"
+              class="transition-all group-hover/hov:!opacity-100 opacity-0 absolute top-0 h-full w-full left-0 flex items-center justify-center material-symbols-sharp text-3xl bg-red-500/50 rounded-lg text-white"
               @click="delMsg(message.id)">
               close</button>
           </div>
@@ -27,6 +27,8 @@
             {{ message.created != message.updated ? "(edited)" : "" }}
           </time>
         </div>
+
+        <!-- <div></div> -->
 
         <textarea v-if="message.expand.groupuser.user == auth.user?.id" class="chat-bubble chat-bubble-primary w-full"
           v-model="message.content" type="text" @change="updateMsg(<ExtendedMessage>message)" />
@@ -53,13 +55,13 @@
 import { auth, pb } from '@/pocketbase';
 import type { BaseUser, Message } from '@/types';
 import { formatTime } from '@/utils';
-import type { ExtendedGroupUser } from '@/views/GroupView.vue';
+import type { ExtendedGroupUser } from '@/types';
 import { onMounted, onUpdated, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-const props = defineProps<{
-  groupuser: ExtendedGroupUser
-}>()
+
+import store from "@/store"
+
 
 export interface ExtendedMessage extends Message {
   expand: {
@@ -134,7 +136,7 @@ async function getMessages() {
 async function sendMsg() {
 
   const res = await pb.collection("pushup_messages").create({
-    groupuser: props.groupuser.id,
+    groupuser: store.groupUser.id,
     content: msg.value
   })
   if (res) {
