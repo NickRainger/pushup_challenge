@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { formatTime } from '@/utils';
 import store from "@/store"
-import type { ExtendedGroupUser } from '@/types';
+// import type { ExtendedGroupUser } from '@/types';
 
 // function canShow(groupUser: ExtendedGroupUser): boolean {
 //   return (!store.groupUsers.some(user => user.id != groupUser.id && groupUser.totalReps == user.totalReps) ||
