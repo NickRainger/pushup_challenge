@@ -1,5 +1,5 @@
 import PocketBase from "pocketbase"
-import { reactive } from 'vue';
+import { reactive, onMounted } from 'vue';
 import type { BaseUser } from "@/types";
 import router from "@/router";
 
@@ -18,11 +18,6 @@ pb.authStore.onChange((token, model) => {
   }
 
 })
-
-
-if (auth.user) {
-  pb.collection("pushup_users").authRefresh()
-}
 
 
 export { pb, auth }

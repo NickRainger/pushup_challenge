@@ -8,7 +8,8 @@ export interface BaseUser extends Record {
 }
 export interface Group extends Record {
   type: "public" | "invite" | "private"
-  naam: string
+  naam: string,
+  startDatum: string
 }
 export interface GroupUser extends Record {
   user: string

@@ -55,10 +55,9 @@ const day = ref(0);
 //   audio.play();
 // }
 
-getDaysDiff();
 function getDaysDiff() {
   const now = new Date(date);
-  const start = new Date(2023, 6, 12, 0, 0, 0, 0);
+  const start = new Date(store.groupUser.expand.group.startDatum);
 
   // date2.setDate(date2.getDate() + 1)
 
@@ -87,7 +86,7 @@ async function getSessions() {
         date.getMonth() + 1
       }"`,
       sort: "-tijd",
-      expand: "groupuser.user"
+      expand: "groupuser.user",
     });
 }
 async function getGroupUsers() {
@@ -95,14 +94,14 @@ async function getGroupUsers() {
     .collection("pushup_groupusers")
     .getFullList<ExtendedGroupUser>({
       filter: `group = "${route.params?.id}"`,
-      expand: "user, group"
+      expand: "user, group",
     });
 }
 
 async function updateGroupUsers() {
   store.groupUsers.forEach((groupUser) => {
     const Asessions = [
-      ...store.sessions.filter((e) => e.groupuser == groupUser.id)
+      ...store.sessions.filter((e) => e.groupuser == groupUser.id),
     ].reverse();
 
     groupUser.completedTime = undefined;
@@ -142,7 +141,9 @@ onMounted(async () => {
 
   await Promise.all([getSessions(), getGroupUsers()]);
 
-  updateGroupUsers();
+  await updateGroupUsers();
+
+  getDaysDiff();
 
   // medals.value.getMedals()
 
